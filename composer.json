@@ -1,0 +1,37 @@
+{
+    "name": "melkov/jotup",
+    "type": "project",
+    "description": "",
+    "keywords": [],
+    "license": "MIT",
+    "require": {
+        "php": "8.5"
+    },
+    "require-dev": {
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+
+    },
+    "extra": {
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
