@@ -5,13 +5,14 @@
     "keywords": [],
     "license": "MIT",
     "require": {
-        "php": "8.5"
+        "php": "~8.5"
     },
     "require-dev": {
     },
     "autoload": {
         "psr-4": {
-            "App\\": "app/"
+            "App\\": "app/",
+            "Jotup\\": "src/"
         }
     },
     "autoload-dev": {
