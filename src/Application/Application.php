@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Jotup\Applications;
+namespace Jotup\Application;
 
 interface Application
 {

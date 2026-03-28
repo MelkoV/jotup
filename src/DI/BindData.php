@@ -8,6 +8,7 @@ readonly class BindData
 {
     public function __construct(
         public string $concrete,
-        public bool $reCreate = false
+        public bool $reCreate = false,
+        public array $values = [],
     ) {}
 }

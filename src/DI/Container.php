@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Jotup\DI;
 
-use Jotup\Config;
 use Jotup\DI\Exceptions\ClassNotFoundException;
 use Jotup\DI\Exceptions\Exception;
 use Jotup\DI\Exceptions\InheritanceException;
@@ -25,6 +24,9 @@ final class Container
     /** @var array<class-string<T>, BindData>  */
     private array $bindings = [];
 
+    /** @var array<class-string<T>, BindData>  */
+    private array $components = [];
+
     /** @var array<class-string<T>, T>  */
     private array $cacheConcretes = [];
 
@@ -32,15 +34,22 @@ final class Container
     /** @var array<string, T>  */
     private array $cacheComponents = [];
 
+    public static function debug(): void
+    {
+        self::getInstance()->debugContainer();
+    }
+
     /**
      * @param class-string<T> $name
+     * @param array $values
      * @return T
      * @throws Exception
      */
-    public static function get(string $name): object
+    public static function get(string $name, array $values = []): object
     {
-        return self::getInstance()->getConcrete($name);
+        return self::getInstance()->getConcrete($name, $values);
     }
+
 
     /**
      * @param string $name
@@ -57,12 +66,23 @@ final class Container
      * @param class-string $contract
      * @param class-string $concrete
      * @param bool $reCreate
+     * @param array $values
      * @return void
      * @throws Exception
      */
-    public static function bind(string $contract, string $concrete, bool $reCreate = false): void
+    public static function bind(string $contract, string $concrete, bool $reCreate = false, array $values = []): void
     {
-        self::getInstance()->bindData($contract, new BindData($concrete, $reCreate));
+        self::getInstance()->bindData($contract, new BindData($concrete, $reCreate, $values));
+    }
+
+    public static function bindComponent(string $name, array $config): void
+    {
+        self::getInstance()->bindComponentData($name, $config);
+    }
+
+    private function debugContainer(): void
+    {
+        var_dump($this->bindings);
     }
 
     /**
@@ -73,32 +93,53 @@ final class Container
      */
     private function bindData(string $contract, BindData $data): void
     {
+        if ($this->canBind($contract, $data)) {
+            $this->bindings[$contract] = $data;
+        }
+    }
+
+    private function bindComponentData(string $name, array $config): void
+    {
+        if (isset($this->cacheComponents[$name])) {
+            unset($this->cacheComponents[$name]);
+        }
+        $this->components[$name] = $config;
+    }
+
+    /**
+     * @param class-string $contract
+     * @param BindData $data
+     * @return bool
+     * @throws ClassNotFoundException
+     * @throws Exception
+     */
+    private function canBind(string $contract, BindData $data): bool
+    {
         try {
-            $contractClass = new \ReflectionClass($contract);
             $concreteClass = new \ReflectionClass($data->concrete);
         } catch (\ReflectionException $e) {
             throw new ClassNotFoundException($e->getMessage(), $e->getCode(), $e);
         }
-        if (!$concreteClass->isSubclassOf($contractClass)) {
-            throw new InheritanceException(sprintf('Class %s does not inherit %s', $data->concrete, $contract));
-        }
-        $this->bindings[$contract] = $data;
+        $this->checkInstance($concreteClass, $contract);
+        return true;
     }
+
 
     /**
      * @param class-string<T> $contract
+     * @param array $values
      * @return T
      * @throws Exception
      */
-    private function getConcrete(string $contract): object
+    private function getConcrete(string $contract, array $values = []): object
     {
         if (!isset($this->bindings[$contract])) {
-            return $this->makeConcrete($contract);
+            return $this->makeConcrete($contract, $values);
         }
         if (!$this->bindings[$contract]->reCreate && isset($this->cacheConcretes[$contract])) {
             return $this->cacheConcretes[$contract];
         }
-        $concrete = $this->makeConcrete($this->bindings[$contract]->concrete);
+        $concrete = $this->makeConcrete($this->bindings[$contract]->concrete, array_merge($this->bindings[$contract]->values, $values));
         if (!$this->bindings[$contract]->reCreate) {
             $this->cacheConcretes[$contract] = $concrete;
         }
@@ -116,8 +157,7 @@ final class Container
         if (isset($this->cacheComponents[$name])) {
             return $this->cacheComponents[$name];
         }
-        // @todo отвязаться от Config
-        $config = Config::get($name);
+        $config = $this->components[$name] ?? [];
         if (!$config) {
             throw new InstancingException(sprintf('Config not found for component %s', $name));
         }
@@ -178,6 +218,9 @@ final class Container
     private function checkInstance(ReflectionClass $concreteClass, ?string $instanceOf = null): void
     {
         if (!$instanceOf) {
+            return;
+        }
+        if ($concreteClass->getName() === $instanceOf) {
             return;
         }
         try {
