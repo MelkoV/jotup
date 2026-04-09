@@ -12,7 +12,7 @@ class Logger implements LoggerInterface
 {
 
     /** @var Route[] $routes */
-    private array $routes;
+    private array $routes = [];
 
     public function __construct(array $routes)
     {
@@ -21,8 +21,12 @@ class Logger implements LoggerInterface
                 continue;
             }
             $class = $config['class'];
+            $routeConfig = $config['config'] ?? [];
             unset($config['class']);
-            $this->routes[] = new $class(...$config);
+            unset($config['config']);
+            $route = new $class(...$config);
+            $route->init(...$routeConfig);
+            $this->routes[] = $route;
         }
     }
 

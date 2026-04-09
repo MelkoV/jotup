@@ -15,8 +15,6 @@ class Web extends Base
     private Bootstrap $bootstrap;
     private Container $container;
 
-    private $test = '123';
-
     public function __construct(Bootstrap $bootstrap)
     {
         defined('APP_DEBUG') or define('APP_DEBUG', false);
@@ -33,7 +31,10 @@ class Web extends Base
         $this->container->bind(
             LoggerInterface::class,
             Logger::class,
-            values: ['routes' => [['class' => \Jotup\Log\Routes\Bootstrap::class]]]
+            values: ['routes' => [
+                ['class' => \Jotup\Log\Routes\Bootstrap::class],
+                ['class' => \Jotup\Log\Routes\Stream::class, 'config' => ['stream' => 'php://stderr']],
+            ]]
         );
     }
 

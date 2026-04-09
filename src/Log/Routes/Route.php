@@ -31,11 +31,32 @@ abstract class Route
 
     }
 
+    public function init(): void
+    {
+
+    }
+
     public function push(LogData $data): void
     {
         if (in_array($data->level, $this->levels) && !in_array($data->level, $this->exclude)) {
             $this->write($data);
         }
+    }
+
+    protected function makeMessage(LogData $data): string
+    {
+        $template = $this->template ?? $this->defaultTemplate(...);
+        $contextFormatter = $this->contextFormat ?? $this->defaultContextFormat(...);
+        $message = strtr($template($data), [
+            '%date' => date($this->dateFormat),
+            '%level' => strtoupper($data->level),
+            '%user' => '',
+            '%request' => '',
+            '%route' => '',
+            '%message' => $data->message,
+            '%context' => $contextFormatter($data->context),
+        ]);
+        return $message;
     }
 
     abstract public function write(LogData $data): void;

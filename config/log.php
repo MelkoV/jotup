@@ -8,7 +8,10 @@ return [
     'class' => Logger::class,
     'routes' => [
         [
-            'class' => 'FileLogger',
+            'class' => \Jotup\Log\Routes\Stream::class,
+            'config' => [
+                'stream' => 'php://stderr',
+            ]
         ],
     ],
 ];
