@@ -12,7 +12,7 @@ class Bootstrap implements \Jotup\Application\Bootstrap
 {
     public function boot(Container $container): void
     {
-        $container->bind(LoggerInterface::class, Config::get('log.class'), values: ['routes' => Config::get('log.routes')]);
+        $container->bind(LoggerInterface::class, Config::get('logger.class'), values: ['routes' => Config::get('logger.routes')]);
     }
 
     public function down(): void
