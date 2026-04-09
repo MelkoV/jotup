@@ -47,7 +47,7 @@ abstract class Route
     {
         $template = $this->template ?? $this->defaultTemplate(...);
         $contextFormatter = $this->contextFormat ?? $this->defaultContextFormat(...);
-        $message = strtr($template($data), [
+        return strtr($template($data), [
             '%date' => date($this->dateFormat),
             '%level' => strtoupper($data->level),
             '%user' => '',
@@ -56,7 +56,6 @@ abstract class Route
             '%message' => $data->message,
             '%context' => $contextFormatter($data->context),
         ]);
-        return $message;
     }
 
     abstract public function write(LogData $data): void;

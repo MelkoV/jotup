@@ -9,6 +9,7 @@ use Jotup\Container\Container;
 use Jotup\ErrorHandler;
 use Jotup\Log\Logger;
 use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 
 class Web extends Base
 {
@@ -24,6 +25,7 @@ class Web extends Base
         $this->registerBootstrapLogger();
         $this->registerErrorHandlers();
         $this->bootstrap->boot($this->container);
+        $this->container->get(LoggerInterface::class)->debug('Bootstrap completed');
     }
 
     protected function registerBootstrapLogger(): void
@@ -32,7 +34,7 @@ class Web extends Base
             LoggerInterface::class,
             Logger::class,
             values: ['routes' => [
-                ['class' => \Jotup\Log\Routes\Bootstrap::class],
+                ['class' => \Jotup\Log\Routes\Bootstrap::class, 'exclude' => [LogLevel::DEBUG]],
                 ['class' => \Jotup\Log\Routes\Stream::class, 'config' => ['stream' => 'php://stderr']],
             ]]
         );

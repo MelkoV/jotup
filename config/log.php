@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Jotup\Log\Logger;
 
-return [
+$logger = [
     'class' => Logger::class,
     'routes' => [
         [
@@ -15,3 +15,11 @@ return [
         ],
     ],
 ];
+if (APP_DEBUG) {
+    $logger['routes'][] = [
+        'class' => \Jotup\Log\Routes\Bootstrap::class,
+        'exclude' => [\Psr\Log\LogLevel::DEBUG, \Psr\Log\LogLevel::INFO]
+    ];
+}
+
+return $logger;
