@@ -1,4 +1,5 @@
 /.idea
+/.codex
 /vendor
 composer.phar
 .env

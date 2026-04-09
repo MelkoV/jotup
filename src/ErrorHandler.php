@@ -4,37 +4,47 @@ declare(strict_types=1);
 
 namespace Jotup;
 
-use Jotup\DI\Container;
+use Closure;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Throwable;
 
+/**
+ * @todo register_shutdown_function())
+ */
 class ErrorHandler
 {
-    public static function register(int $levels): void
+    private Closure $logger;
+
+    public function __construct(Closure $logger)
     {
-        set_error_handler([ErrorHandler::class, 'errorHandler'], $levels);
-        set_exception_handler([ErrorHandler::class, 'exceptionHandler']);
+        $this->logger = $logger;
+    }
+
+    public function register(int $levels): void
+    {
+        set_error_handler([$this, 'errorHandler'], $levels);
+        set_exception_handler([$this, 'exceptionHandler']);
     }
 
 
-    public static function errorHandler(int $errno, string $errstr, string $errfile, int $errline): bool
+    public function errorHandler(int $errno, string $errstr, string $errfile, int $errline): bool
     {
-        Container::get(LoggerInterface::class)->log(self::getErrorLevel($errno), $errstr, [
+        $this->getLogger()->log($this->getErrorLevel($errno), $errstr, [
             'file' => $errfile,
             'line' => $errline,
-            'errno' => self::getErrorTypeName($errno),
+            'errno' => $this->getErrorName($errno),
         ]);
 
         return true;
     }
 
-    public static function exceptionHandler(Throwable $exception): void
+    public function exceptionHandler(Throwable $exception): void
     {
 //        var_dump($exception);
         // @todo trace and previous
         $message = sprintf('Uncaught %s: %s', get_class($exception), $exception->getMessage());
-        Container::get(LoggerInterface::class)->critical($message, [
+        $this->getLogger()->critical($message, [
             'file' => $exception->getFile(),
             'line' => $exception->getLine(),
             'errno' => $exception->getCode(),
@@ -42,10 +52,12 @@ class ErrorHandler
         ]);
     }
 
-    /**
-     * Возвращает имя типа ошибки
-     */
-    private static function getErrorLevel(int $errno): string
+    private function getLogger(): LoggerInterface
+    {
+        return ($this->logger)();
+    }
+
+    private function getErrorLevel(int $errno): string
     {
         return match ($errno) {
             E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR, E_PARSE
@@ -67,10 +79,7 @@ class ErrorHandler
         };
     }
 
-    /**
-     * Возвращает имя типа ошибки
-     */
-    private static function getErrorTypeName(int $errno): string
+    private function getErrorName(int $errno): string
     {
         $types = [
             E_ERROR => 'E_ERROR',

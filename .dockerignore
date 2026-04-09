@@ -1,0 +1,14 @@
+.git/
+.git*
+.idea/
+*.log
+*.tmp
+*.swp
+Thumbs.db
+.DS_Store
+node_modules/
+vendor/
+build/
+dist/
+tmp/
+temp/

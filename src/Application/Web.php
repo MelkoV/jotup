@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Jotup\Application;
 
 use Jotup\Config;
-use Jotup\DI\Container;
+use Jotup\Container\Container;
 use Jotup\ErrorHandler;
 use Jotup\Log\Logger;
 use Psr\Log\LoggerInterface;
@@ -13,20 +13,36 @@ use Psr\Log\LoggerInterface;
 class Web extends Base
 {
     private Bootstrap $bootstrap;
+    private Container $container;
+
+    private $test = '123';
 
     public function __construct(Bootstrap $bootstrap)
     {
-        defined('JOTUP_DEBUG') or define('JOTUP_DEBUG', false);
+        defined('APP_DEBUG') or define('APP_DEBUG', false);
 
         $this->bootstrap = $bootstrap;
+        $this->container = new Container();
         $this->registerBootstrapLogger();
-        ErrorHandler::register(Config::get('error.level', E_ALL));
-        $this->bootstrap->boot();
+        $this->registerErrorHandlers();
+        $this->bootstrap->boot($this->container);
     }
 
     protected function registerBootstrapLogger(): void
     {
-        Container::bind(LoggerInterface::class, Logger::class, values: ['routes' => [['class' => \Jotup\Log\Routes\Bootstrap::class]]]);
+        $this->container->bind(
+            LoggerInterface::class,
+            Logger::class,
+            values: ['routes' => [['class' => \Jotup\Log\Routes\Bootstrap::class]]]
+        );
+    }
+
+    protected function registerErrorHandlers(): void
+    {
+        $errorHandler = new ErrorHandler(function (): LoggerInterface {
+            return $this->container->get(LoggerInterface::class);
+        });
+        $errorHandler->register(Config::get('error.level', E_ALL));
     }
 
 }

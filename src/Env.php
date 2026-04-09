@@ -34,6 +34,9 @@ class Env
         return false;
     }
 
+    /**
+     * @todo set public, rename to loadFromEnvFile, delete envPath, test boolean, getenv - local_only?
+     */
     private static function load(): void
     {
         self::$loaded = true;

@@ -7,7 +7,7 @@
     "require": {
         "php": "~8.5",
         "ext-pdo": "*",
-        "psr/container": "^2.0",
+        "openswoole/core": "^26.2",
         "psr/log": "^3.0"
     },
     "autoload": {
@@ -35,5 +35,8 @@
         }
     },
     "minimum-stability": "stable",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "require-dev": {
+        "openswoole/ide-helper": "^26.2"
+    }
 }

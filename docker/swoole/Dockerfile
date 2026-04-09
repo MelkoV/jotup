@@ -1,4 +1,4 @@
-FROM php:8.5-fpm
+FROM php:8.5-cli
 
 LABEL maintainer="ant-smorodin@ya.ru"
 
@@ -28,15 +28,20 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
         bcmath \
         gd \
         zip \
-        intl
+        intl \
+    && pecl install openswoole && docker-php-ext-enable openswoole
 
 COPY --from=composer:2.9.5 /usr/bin/composer /usr/bin/composer
 
-ADD docker/php/php.ini /usr/local/etc/php/conf.d/40-custom.ini
-ADD docker/php/output.conf /usr/local/etc/php/conf.d/output.conf
-ADD docker/php/zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
+#ADD docker/php/php.ini /usr/local/etc/php/conf.d/40-custom.ini
+#ADD docker/php/output.conf /usr/local/etc/php/conf.d/output.conf
+#ADD docker/php/zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 
 COPY . /var/www/html
 WORKDIR /var/www/html
 
-CMD ["php-fpm"]
+EXPOSE 9501/tcp
+
+#CMD ["php-fpm"]
+
+CMD php swoole.php

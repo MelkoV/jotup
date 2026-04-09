@@ -4,19 +4,17 @@ declare(strict_types=1);
 
 namespace App;
 
-use Jotup\Config;
-use Jotup\DB\Connections\Connection;
-use Jotup\DI\Container;
+use Jotup\Container\Container;
 use Psr\Log\LoggerInterface;
 
 class Bootstrap implements \Jotup\Application\Bootstrap
 {
-    public function boot(): void
+    public function boot(Container $container): void
     {
-        $logger = Container::get(LoggerInterface::class);
-//        $logger->info('Test');
-//        Container::bindComponent('db', Config::get('db'));
-//        Container::bind(Connection::class, Config::get('db.class'), values: Config::get('db'));
+        $logger = $container->get(LoggerInterface::class);
+        $logger->debug('Bootstrap started');
+//        var_dump(1/0);
+        var_dump(true);
     }
 
     public function down(): void
