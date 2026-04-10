@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Jotup\Container;
 
-readonly class BindData
+readonly final class BindData
 {
     public function __construct(
+        public string $id,
         public string $concrete,
-        public bool $reCreate = false,
+        public bool $singleton = false,
         public array $values = [],
     ) {}
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Jotup\Log;
+namespace Jotup\Logger;
 
 readonly class LogData
 {

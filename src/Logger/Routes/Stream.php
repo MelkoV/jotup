@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Jotup\Log\Routes;
+namespace Jotup\Logger\Routes;
 
 use Jotup\Exceptions\InvalidArgumentException;
-use Jotup\Log\LogData;
+use Jotup\Logger\LogData;
 
 class Stream extends Route
 {

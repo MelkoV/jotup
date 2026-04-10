@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Jotup\Log\Routes;
+namespace Jotup\Logger\Routes;
 
-use Jotup\Log\LogData;
+use Jotup\Logger\LogData;
 use Psr\Log\LogLevel;
 
 abstract class Route
@@ -47,14 +47,18 @@ abstract class Route
     {
         $template = $this->template ?? $this->defaultTemplate(...);
         $contextFormatter = $this->contextFormat ?? $this->defaultContextFormat(...);
+        $context = $data->context;
+        $executionScope = $context['executionScope'] ?? [];
+        unset($context['executionScope']);
         return strtr($template($data), [
             '%date' => date($this->dateFormat),
             '%level' => strtoupper($data->level),
-            '%user' => '',
-            '%request' => '',
-            '%route' => '',
+            '%user' => $executionScope['userId'] ?? ' - ',
+            '%category' => $context['category'] ?? ' - ',
+            '%request' => $executionScope['requestId'] ?? ' - ',
+            '%route' => ' - ',
             '%message' => $data->message,
-            '%context' => $contextFormatter($data->context),
+            '%context' => $contextFormatter($context),
         ]);
     }
 
@@ -62,7 +66,7 @@ abstract class Route
 
     protected function defaultTemplate(LogData $data): string
     {
-        return '[%date][%level][%user][%request][%route] %message. %context';
+        return '[%date][%category][%level][%request][%user][%route] %message. %context';
     }
 
     protected function defaultContextFormat(array $context = []): string

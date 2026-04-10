@@ -7,7 +7,7 @@ namespace Jotup\Application;
 use Jotup\Config;
 use Jotup\Container\Container;
 use Jotup\ErrorHandler;
-use Jotup\Log\Logger;
+use Jotup\Logger\Logger;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 
@@ -21,8 +21,11 @@ class Web extends Base
         defined('APP_DEBUG') or define('APP_DEBUG', false);
 
         $this->bootstrap = $bootstrap;
-        $this->container = new Container();
+        $this->container = new Container(debug: false);
         $this->registerBootstrapLogger();
+        /** @var LoggerInterface $logger */
+        $logger = $this->container->get(LoggerInterface::class);
+        $this->container->setLogger($logger);
         $this->registerErrorHandlers();
         $this->bootstrap->boot($this->container);
         $this->container->get(LoggerInterface::class)->debug('Bootstrap completed');
@@ -31,11 +34,12 @@ class Web extends Base
     protected function registerBootstrapLogger(): void
     {
         $this->container->bind(
-            LoggerInterface::class,
-            Logger::class,
+            id: LoggerInterface::class,
+            concrete: Logger::class,
+            singleton: true,
             values: ['routes' => [
-                ['class' => \Jotup\Log\Routes\Bootstrap::class, 'exclude' => [LogLevel::DEBUG]],
-                ['class' => \Jotup\Log\Routes\Stream::class, 'config' => ['stream' => 'php://stderr']],
+                ['class' => \Jotup\Logger\Routes\Bootstrap::class, 'exclude' => [LogLevel::DEBUG]],
+                ['class' => \Jotup\Logger\Routes\Stream::class, 'config' => ['stream' => 'php://stderr']],
             ]]
         );
     }

@@ -25,6 +25,7 @@ class ErrorHandler
     {
         set_error_handler([$this, 'errorHandler'], $levels);
         set_exception_handler([$this, 'exceptionHandler']);
+//        register_shutdown_function();
     }
 
 

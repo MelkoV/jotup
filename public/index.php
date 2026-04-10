@@ -7,8 +7,9 @@ require __DIR__.'/../vendor/autoload.php';
 defined('APP_DEBUG') or define('APP_DEBUG', \Jotup\Env::getBool('APP_DEBUG'));
 defined('APP_CORE_PATH') or define('APP_CORE_PATH', __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR);
 
-$bootstrap = new \App\Bootstrap();
-$app = new \Jotup\Application\Web($bootstrap);
+$app = new \Jotup\Application\Web(
+    new \App\Bootstrap()
+);
 
 echo '<html><body style="background: #191a1c; color: #b7b7b7;">';
 

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Jotup\Log\Routes;
+namespace Jotup\Logger\Routes;
 
-use Jotup\Log\LogData;
+use Jotup\Logger\LogData;
 
 class Bootstrap extends Route
 {
