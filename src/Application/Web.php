@@ -6,6 +6,7 @@ namespace Jotup\Application;
 
 use Jotup\Config;
 use Jotup\Container\Container;
+use Jotup\Contracts\Bootstrap;
 use Jotup\ErrorHandler;
 use Jotup\Logger\Logger;
 use Psr\Log\LoggerInterface;
@@ -13,22 +14,9 @@ use Psr\Log\LogLevel;
 
 class Web extends Base
 {
-    private Bootstrap $bootstrap;
-    private Container $container;
-
-    public function __construct(Bootstrap $bootstrap)
+    protected function registerServices(): void
     {
-        defined('APP_DEBUG') or define('APP_DEBUG', false);
 
-        $this->bootstrap = $bootstrap;
-        $this->container = new Container(debug: false);
-        $this->registerBootstrapLogger();
-        /** @var LoggerInterface $logger */
-        $logger = $this->container->get(LoggerInterface::class);
-        $this->container->setLogger($logger);
-        $this->registerErrorHandlers();
-        $this->bootstrap->boot($this->container);
-        $this->container->get(LoggerInterface::class)->debug('Bootstrap completed');
     }
 
     protected function registerBootstrapLogger(): void
