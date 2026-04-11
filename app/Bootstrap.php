@@ -18,6 +18,13 @@ class Bootstrap implements \Jotup\Contracts\Bootstrap
         ];
     }
 
+    public function routes(): array
+    {
+        return [
+            'api' => APP_CORE_PATH . 'routes/api.php',
+        ];
+    }
+
     public function boot(Application $application): void
     {
 

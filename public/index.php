@@ -11,6 +11,4 @@ $app = new \Jotup\Application\Web(
     new \App\Bootstrap()
 );
 
-echo '<html><body style="background: #191a1c; color: #b7b7b7;">';
 $app->run();
-echo '</body></html>';

@@ -5,18 +5,59 @@ declare(strict_types=1);
 namespace Jotup\Application;
 
 use Jotup\Config;
-use Jotup\Container\Container;
-use Jotup\Contracts\Bootstrap;
 use Jotup\ErrorHandler;
+use Jotup\Http\Handler\NotFoundHandler;
+use Jotup\Http\HttpServiceProvider;
+use Jotup\Http\Kernel;
+use Jotup\Http\Middleware\DispatchMiddleware;
+use Jotup\Http\Middleware\ExceptionMiddleware;
+use Jotup\Http\Middleware\RoutingMiddleware;
+use Jotup\Http\Request\ServerRequest;
+use Jotup\Http\Response\Emitter;
+use Jotup\Http\Routing\Route;
+use Jotup\Http\Routing\RouteCollection;
 use Jotup\Logger\Logger;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 
 class Web extends Base
 {
+    public function run(): void
+    {
+        $request = ServerRequest::fromGlobals();
+        $emitter = $this->container->get(Emitter::class);
+        $kernel = new Kernel(
+            notFoundHandler: $this->container->get(NotFoundHandler::class),
+            exceptionMiddleware: $this->container->get(ExceptionMiddleware::class),
+            routingMiddleware: $this->container->get(RoutingMiddleware::class),
+            dispatchMiddleware: $this->container->get(DispatchMiddleware::class),
+            middleware: $this->middleware,
+        );
+        $response = $kernel->handle($request);
+        $emitter->emit($response);
+    }
+
+    public function getRouteCollection(): RouteCollection
+    {
+        $collection = new RouteCollection();
+
+        foreach ($this->bootstrap->routes() as $file) {
+            if (!is_string($file) || !is_file($file)) {
+                continue;
+            }
+
+            $loaded = Route::load($file);
+            foreach ($loaded->all() as $route) {
+                $collection->add($route);
+            }
+        }
+
+        return $collection;
+    }
+
     protected function registerServices(): void
     {
-
+        new HttpServiceProvider()->register($this);
     }
 
     protected function registerBootstrapLogger(): void

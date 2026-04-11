@@ -14,4 +14,6 @@ interface Bootstrap
      * @return ServiceProvider[]
      */
     public function getServiceProviders(): array;
+
+    public function routes(): array;
 }

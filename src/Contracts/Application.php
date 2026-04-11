@@ -11,4 +11,6 @@ interface Application
     public function run(): void;
 
     public function getContainer(): Container;
+
+    public function getRouteCollection(): RouteCollection;
 }

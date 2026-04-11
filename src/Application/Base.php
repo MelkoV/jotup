@@ -7,12 +7,15 @@ namespace Jotup\Application;
 use Jotup\Container\Container;
 use Jotup\Contracts\Application;
 use Jotup\Contracts\Bootstrap;
+use Psr\Http\Server\MiddlewareInterface;
 use Psr\Log\LoggerInterface;
 
 abstract class Base implements Application
 {
     protected Bootstrap $bootstrap;
     protected Container $container;
+    /** @var MiddlewareInterface[] $middlewares */
+    protected array $middleware = [];
 
     public function __construct(Bootstrap $bootstrap)
     {
@@ -28,13 +31,9 @@ abstract class Base implements Application
         $this->boot();
     }
 
-    private function boot(): void
+    public function registerMiddleware(MiddlewareInterface $middleware): void
     {
-        $this->registerServices();
-        foreach ($this->bootstrap->getServiceProviders() as $providerClass) {
-            new $providerClass()->register($this);
-        }
-        $this->bootstrap->boot($this);
+        $this->middleware[] = $middleware;
     }
 
     public function getContainer(): Container
@@ -47,4 +46,14 @@ abstract class Base implements Application
     abstract protected function registerErrorHandlers(): void;
 
     abstract protected function registerServices(): void;
+
+    private function boot(): void
+    {
+        $this->registerServices();
+        foreach ($this->bootstrap->getServiceProviders() as $providerClass) {
+            new $providerClass()->register($this);
+        }
+        $this->bootstrap->boot($this);
+        unset($this->bootstrap);
+    }
 }
