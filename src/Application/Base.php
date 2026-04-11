@@ -19,7 +19,6 @@ abstract class Base implements Application
     public function __construct(Bootstrap $bootstrap)
     {
         defined('APP_DEBUG') or define('APP_DEBUG', false);
-
         $this->bootstrap = $bootstrap;
         $this->container = new Container(debug: false);
         $this->container->bind(Container::class, $this->container);
@@ -42,7 +41,15 @@ abstract class Base implements Application
 
     abstract protected function registerErrorHandlers(): void;
 
-    abstract protected function registerServices(): void;
+    protected function registerServices(): void
+    {
+
+    }
+
+    protected function bootApplication(): void
+    {
+
+    }
 
     private function boot(): void
     {
@@ -50,6 +57,7 @@ abstract class Base implements Application
         foreach ($this->bootstrap->getServiceProviders() as $providerClass) {
             new $providerClass()->register($this);
         }
+        $this->bootApplication();
         $this->bootstrap->boot($this);
         unset($this->bootstrap);
     }

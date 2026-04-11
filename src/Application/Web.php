@@ -97,9 +97,10 @@ class Web extends Base implements WithMiddleware
 
     protected function registerErrorHandlers(): void
     {
-        $errorHandler = new ErrorHandler(function (): LoggerInterface {
-            return $this->container->get(LoggerInterface::class);
-        });
+        $errorHandler = new ErrorHandler(
+            fn (): LoggerInterface => $this->container->get(LoggerInterface::class),
+            (bool) Config::get('error.ignoreVendorDeprecations', false),
+        );
         $errorHandler->register(Config::get('error.level', E_ALL));
     }
 

@@ -20,6 +20,8 @@
         "psr/http-server-handler": "^1.0",
         "psr/http-server-middleware": "^1.0",
         "psr/log": "^3.0",
+        "symfony/console": "^7.4",
+        "yiisoft/cache-apcu": "^1.1",
         "yiisoft/db": "^1.3",
         "yiisoft/db-migration": "^1.2",
         "yiisoft/db-pgsql": "^1.3"
@@ -36,7 +38,15 @@
         }
     },
     "scripts": {
-
+        "console": "@php bin/console",
+        "db:smoke": "@php bin/console app:db:smoke",
+        "migrate": "@php bin/console",
+        "migrate:create": "@php bin/console migrate:create",
+        "migrate:up": "@php bin/console migrate:up",
+        "migrate:down": "@php bin/console migrate:down",
+        "migrate:history": "@php bin/console migrate:history",
+        "migrate:new": "@php bin/console migrate:new",
+        "migrate:redo": "@php bin/console migrate:redo"
     },
     "extra": {
     },

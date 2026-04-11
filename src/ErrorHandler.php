@@ -16,8 +16,10 @@ class ErrorHandler
 {
     private Closure $logger;
 
-    public function __construct(Closure $logger)
-    {
+    public function __construct(
+        Closure $logger,
+        private readonly bool $ignoreVendorDeprecations = false,
+    ) {
         $this->logger = $logger;
     }
 
@@ -31,6 +33,10 @@ class ErrorHandler
 
     public function errorHandler(int $errno, string $errstr, string $errfile, int $errline): bool
     {
+        if ($this->shouldIgnore($errno, $errfile)) {
+            return true;
+        }
+
         $this->getLogger()->log($this->getErrorLevel($errno), $errstr, [
             'file' => $errfile,
             'line' => $errline,
@@ -100,5 +106,21 @@ class ErrorHandler
         ];
 
         return $types[$errno] ?? 'UNKNOWN';
+    }
+
+    private function shouldIgnore(int $errno, string $errfile): bool
+    {
+        if (!$this->ignoreVendorDeprecations) {
+            return false;
+        }
+
+        if ($errno !== E_DEPRECATED && $errno !== E_USER_DEPRECATED) {
+            return false;
+        }
+
+        $vendorPath = DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR;
+        $normalizedPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $errfile);
+
+        return str_contains($normalizedPath, $vendorPath);
     }
 }

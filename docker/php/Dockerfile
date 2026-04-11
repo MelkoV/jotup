@@ -28,7 +28,10 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
         bcmath \
         gd \
         zip \
-        intl
+        intl \
+    && pecl install apcu \
+    && docker-php-ext-enable apcu \
+    && echo "apc.enable_cli=1" > /usr/local/etc/php/conf.d/apcu-cli.ini
 
 COPY --from=composer:2.9.5 /usr/bin/composer /usr/bin/composer
 
