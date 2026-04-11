@@ -10,7 +10,6 @@ use Jotup\Http\Factory\HttpFactory;
 use Jotup\Http\Handler\NotFoundHandler;
 use Jotup\Http\Middleware\DispatchMiddleware;
 use Jotup\Http\Middleware\ExceptionMiddleware;
-use Jotup\Http\Middleware\MiddlewarePipeline;
 use Jotup\Http\Middleware\MiddlewareResolver;
 use Jotup\Http\Middleware\RoutingMiddleware;
 use Jotup\Http\Response\Emitter;
@@ -25,7 +24,6 @@ use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\UploadedFileFactoryInterface;
 use Psr\Http\Message\UriFactoryInterface;
-use Psr\Http\Server\RequestHandlerInterface;
 
 class HttpServiceProvider implements ServiceProvider
 {
@@ -50,10 +48,10 @@ class HttpServiceProvider implements ServiceProvider
         $container->bind(RoutingMiddleware::class, RoutingMiddleware::class, true);
         $container->bind(DispatchMiddleware::class, DispatchMiddleware::class, true);
         $container->bind(RouteMatcher::class, RouteMatcher::class, true);
-        $pipe = $container->bind(MiddlewarePipeline::class, MiddlewarePipeline::class, values: [
-            'fallbackHandler' => $container->get(NotFoundHandler::class),
-        ]);
-        $container->bind(RequestHandlerInterface::class, $pipe);
+//        $pipe = $container->bind(MiddlewarePipeline::class, MiddlewarePipeline::class, values: [
+//            'fallbackHandler' => $container->get(NotFoundHandler::class),
+//        ]);
+//        $container->bind(RequestHandlerInterface::class, $pipe);
         $container->bind(ControllerDispatcher::class, ControllerDispatcher::class, true);
 
     }

@@ -195,18 +195,22 @@ class Container implements ContainerInterface
         $args = [];
         foreach ($params as $param) {
             $this->log('Setting parameter ' . $param->getName(), $values);
-            if ($param->hasType() && !$param->getType()->isBuiltin()) {
-                $paramValues = (isset($values[$param->getName()]) && is_array($values[$param->getName()])) ? $values[$param->getName()] : [];
-                $args[] = $this->resolveParameter($param->getName(), $param->getType()->getName(), $paramValues, $dependencies);
-                continue;
-            }
-            if (isset($values[$param->getName()])) {
-                $args[] = $values[$param->getName()];
-                continue;
-            }
-            if ($param->isOptional()) {
-                $args[] = $param->getDefaultValue();
-                continue;
+            try {
+                if ($param->hasType() && !$param->getType()->isBuiltin()) {
+                    $paramValues = (isset($values[$param->getName()]) && is_array($values[$param->getName()])) ? $values[$param->getName()] : [];
+                    $args[] = $this->resolveParameter($param->getName(), $param->getType()->getName(), $paramValues, $dependencies);
+                    continue;
+                }
+                if (isset($values[$param->getName()])) {
+                    $args[] = $values[$param->getName()];
+                    continue;
+                }
+                if ($param->isOptional()) {
+                    $args[] = $param->getDefaultValue();
+                    continue;
+                }
+            } catch (ReflectionException $e) {
+                throw new InstancingException($e->getMessage(), $e->getCode(), $e);
             }
             throw new InvalidArgumentException(sprintf(
                 'Unable to resolve required parameter $%s.',

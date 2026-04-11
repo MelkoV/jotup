@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Jotup\Http\Middleware;
 
-use Jotup\Contracts\Middleware;
 use Jotup\Http\Dispatcher\ControllerDispatcher;
 use Jotup\Http\Handler\CallableRequestHandler;
 use Jotup\Http\Response\Responder;
 use Jotup\Http\Routing\RouteDefinition;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
-class DispatchMiddleware implements Middleware
+class DispatchMiddleware implements MiddlewareInterface
 {
     public function __construct(
         private readonly ControllerDispatcher $dispatcher,

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Jotup\Http\Middleware;
 
 use Jotup\Container\Container;
-use Jotup\Contracts\Middleware;
+use Psr\Http\Server\MiddlewareInterface;
 
 class MiddlewareResolver
 {
@@ -15,15 +15,15 @@ class MiddlewareResolver
     }
 
     /**
-     * @param list<class-string|string|Middleware> $middleware
-     * @return list<Middleware>
+     * @param list<class-string|string|MiddlewareInterface> $middleware
+     * @return list<MiddlewareInterface>
      */
     public function resolve(array $middleware): array
     {
         $resolved = [];
 
         foreach ($middleware as $item) {
-            if ($item instanceof Middleware) {
+            if ($item instanceof MiddlewareInterface) {
                 $resolved[] = $item;
                 continue;
             }
@@ -33,7 +33,7 @@ class MiddlewareResolver
             }
 
             $instance = $this->container->make($item);
-            if ($instance instanceof Middleware) {
+            if ($instance instanceof MiddlewareInterface) {
                 $resolved[] = $instance;
             }
         }

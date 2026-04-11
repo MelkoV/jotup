@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Jotup\Http\Middleware;
 
-use Jotup\Contracts\Middleware;
 use Jotup\Http\Handler\CallableRequestHandler;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 class MiddlewarePipeline implements RequestHandlerInterface
 {
     /**
-     * @param Middleware[] $middleware
+     * @param MiddlewareInterface[] $middleware
      */
     public function __construct(
         private readonly RequestHandlerInterface $fallbackHandler,
@@ -21,7 +21,7 @@ class MiddlewarePipeline implements RequestHandlerInterface
     ) {
     }
 
-    public function pipe(Middleware $middleware): self
+    public function pipe(MiddlewareInterface $middleware): self
     {
         $clone = clone $this;
         $clone->middleware[] = $middleware;
@@ -30,7 +30,7 @@ class MiddlewarePipeline implements RequestHandlerInterface
     }
 
     /**
-     * @param Middleware[] $middleware
+     * @param MiddlewareInterface[] $middleware
      */
     public function through(array $middleware): self
     {

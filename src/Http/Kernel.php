@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Jotup\Http;
 
-use Jotup\Contracts\Middleware;
 use Jotup\Http\Handler\NotFoundHandler;
 use Jotup\Http\Middleware\DispatchMiddleware;
 use Jotup\Http\Middleware\ExceptionMiddleware;
@@ -12,11 +11,12 @@ use Jotup\Http\Middleware\MiddlewarePipeline;
 use Jotup\Http\Middleware\RoutingMiddleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
 
 class Kernel
 {
     /**
-     * @param Middleware[] $middleware
+     * @param MiddlewareInterface[] $middleware
      */
     public function __construct(
         private readonly NotFoundHandler $notFoundHandler,
