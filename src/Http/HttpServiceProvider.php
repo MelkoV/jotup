@@ -7,6 +7,7 @@ namespace Jotup\Http;
 use Jotup\Contracts\Application;
 use Jotup\Http\Dispatcher\ControllerDispatcher;
 use Jotup\Http\Factory\HttpFactory;
+use Jotup\Http\Handler\ExceptionHandler;
 use Jotup\Http\Handler\NotFoundHandler;
 use Jotup\Http\Middleware\DispatchMiddleware;
 use Jotup\Http\Middleware\ExceptionMiddleware;
@@ -42,6 +43,7 @@ class HttpServiceProvider implements ServiceProvider
         $container->bind(Emitter::class, Emitter::class, true);
         $container->bind(Respond::class, Respond::class, true);
         $container->bind(Responder::class, Responder::class, true);
+        $container->bind(ExceptionHandler::class, ExceptionHandler::class, true);
         $container->bind(NotFoundHandler::class, NotFoundHandler::class, true);
         $container->bind(MiddlewareResolver::class, new MiddlewareResolver($container), true);
         $container->bind(ExceptionMiddleware::class, ExceptionMiddleware::class, true);

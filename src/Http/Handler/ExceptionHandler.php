@@ -10,7 +10,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
-class NotFoundHandler implements RequestHandlerInterface
+class ExceptionHandler implements RequestHandlerInterface
 {
     public function __construct(
         private readonly Respond $respond,
@@ -23,9 +23,9 @@ class NotFoundHandler implements RequestHandlerInterface
         return $this->responder->toResponse(
             $this->respond->json([
                 'ok' => false,
-                'error' => 'Not Found',
-                'status' => 404,
-            ], 404)
+                'error' => 'Internal Server Error',
+                'status' => 500,
+            ], 500)
         );
     }
 }

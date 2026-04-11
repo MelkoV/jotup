@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App;
 
+use App\Http\Middleware\AddDebugHeaders;
 use App\ServiceProviders\AppServiceProvider;
 use App\ServiceProviders\LogServiceProvider;
 use Jotup\Contracts\Application;
+use Jotup\Contracts\WithMiddleware;
 
 class Bootstrap implements \Jotup\Contracts\Bootstrap
 {
@@ -25,9 +27,10 @@ class Bootstrap implements \Jotup\Contracts\Bootstrap
         ];
     }
 
-    public function boot(Application $application): void
+    public function boot(Application|WithMiddleware $application): void
     {
-
+        $application->getContainer()->get('logger')->debug('Bootstrap booting');
+        $application->registerMiddleware(AddDebugHeaders::class);
     }
 
 }

@@ -22,7 +22,7 @@ class ControllerDispatcher
     public function dispatch(string $controller, string $action, array $arguments = []): ResponseInterface
     {
         $instance = $this->container->make($controller);
-        $result = $instance->{$action}(...$arguments);
+        $result = $this->container->makeMethod($instance, $action, $arguments);
 
         return $this->responder->toResponse($result);
     }

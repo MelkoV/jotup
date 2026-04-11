@@ -10,7 +10,7 @@ class Route
     /** @var list<array{prefix: string, middleware: list<class-string|string>}> */
     private static array $groupStack = [];
 
-    public static function load(string $file): RouteCollection
+    public static function load(string $file, string $prefix = ''): RouteCollection
     {
         if (!class_exists('Route', false)) {
             class_alias(self::class, 'Route');
@@ -18,7 +18,7 @@ class Route
 
         self::$collection = new RouteCollection();
         self::$groupStack = [[
-            'prefix' => '',
+            'prefix' => self::normalizePrefix($prefix),
             'middleware' => [],
         ]];
 
@@ -148,6 +148,17 @@ class Route
         $full = preg_replace('#/+#', '/', $full) ?: '/';
 
         return $full === '' ? '/' : $full;
+    }
+
+    public static function normalizePrefix(string $prefix): string
+    {
+        $prefix = trim($prefix);
+
+        if ($prefix === '' || $prefix === '/') {
+            return '';
+        }
+
+        return '/' . trim($prefix, '/');
     }
 
     /**

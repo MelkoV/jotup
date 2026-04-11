@@ -7,15 +7,14 @@ namespace Jotup\Application;
 use Jotup\Container\Container;
 use Jotup\Contracts\Application;
 use Jotup\Contracts\Bootstrap;
-use Psr\Http\Server\MiddlewareInterface;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 abstract class Base implements Application
 {
     protected Bootstrap $bootstrap;
     protected Container $container;
-    /** @var MiddlewareInterface[] $middlewares */
-    protected array $middleware = [];
+
 
     public function __construct(Bootstrap $bootstrap)
     {
@@ -23,6 +22,8 @@ abstract class Base implements Application
 
         $this->bootstrap = $bootstrap;
         $this->container = new Container(debug: false);
+        $this->container->bind(Container::class, $this->container);
+        $this->container->bind(ContainerInterface::class, $this->container);
         $this->registerBootstrapLogger();
         /** @var LoggerInterface $logger */
         $logger = $this->container->get(LoggerInterface::class);
@@ -31,10 +32,6 @@ abstract class Base implements Application
         $this->boot();
     }
 
-    public function registerMiddleware(MiddlewareInterface $middleware): void
-    {
-        $this->middleware[] = $middleware;
-    }
 
     public function getContainer(): Container
     {

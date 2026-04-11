@@ -46,14 +46,15 @@ class DispatchMiddleware implements MiddlewareInterface
     {
         $handler = $route->handler;
         $params = $request->getAttribute('route_params', []);
-        $arguments = is_array($params) ? array_values($params) : [];
+        $arguments = is_array($params) ? $params : [];
+        $arguments['request'] = $request;
 
         if (is_array($handler) && isset($handler[0], $handler[1])) {
             return $this->dispatcher->dispatch($handler[0], $handler[1], $arguments);
         }
 
         if (is_callable($handler)) {
-            return $this->responder->toResponse($handler($request, ...$arguments));
+            return $this->responder->toResponse($handler($request, ...array_values($params)));
         }
 
         if (is_string($handler) && str_contains($handler, '@')) {
