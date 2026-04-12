@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Api\Requests\Rules;
 
 use App\Enums\ListAccess;
+use Jotup\Exceptions\ValidationError;
 use Jotup\Http\Request\Request;
 use Jotup\Http\Request\Validation\RuleInterface;
 
@@ -15,11 +16,11 @@ final class CheckCanEditListByItem implements RuleInterface
         return 'can_edit_list_item';
     }
 
-    public function validate(string $field, mixed $value, array $data, Request $request): ?string
+    public function validate(string $field, mixed $value, array $data, Request $request): void
     {
         $db = $request->db();
         if ($db === null) {
-            return null;
+            return;
         }
 
         $row = $db->query()
@@ -30,12 +31,12 @@ final class CheckCanEditListByItem implements RuleInterface
             ->one();
 
         if ($row === null) {
-            return 'The selected list item is unavailable.';
+            throw new ValidationError('The selected list item is unavailable.');
         }
 
         $userId = $request->userId();
         if ($userId === null || (string) $row['owner_id'] === $userId) {
-            return null;
+            return;
         }
 
         $member = $db->query()
@@ -45,6 +46,8 @@ final class CheckCanEditListByItem implements RuleInterface
 
         $canEdit = (((int) $row['access']) & ListAccess::CanEdit->value) === ListAccess::CanEdit->value;
 
-        return ($member && $canEdit) ? null : 'You do not have permission to edit this list item.';
+        if (!$member || !$canEdit) {
+            throw new ValidationError('You do not have permission to edit this list item.');
+        }
     }
 }

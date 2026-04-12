@@ -10,5 +10,5 @@ interface RuleInterface
 {
     public function name(): string;
 
-    public function validate(string $field, mixed $value, array $data, Request $request): ?string;
+    public function validate(string $field, mixed $value, array $data, Request $request): void;
 }

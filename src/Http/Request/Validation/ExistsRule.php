@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jotup\Http\Request\Validation;
 
 use BackedEnum;
+use Jotup\Exceptions\ValidationError;
 use Jotup\Http\Request\Request;
 
 final class ExistsRule implements RuleInterface
@@ -31,10 +32,10 @@ final class ExistsRule implements RuleInterface
         return 'exists';
     }
 
-    public function validate(string $field, mixed $value, array $data, Request $request): ?string
+    public function validate(string $field, mixed $value, array $data, Request $request): void
     {
         if ($value === null || $request->db() === null) {
-            return null;
+            return;
         }
 
         $condition = [$this->column => $value];
@@ -47,6 +48,8 @@ final class ExistsRule implements RuleInterface
             ->where($condition)
             ->exists();
 
-        return $exists ? null : sprintf('The selected %s is invalid.', $field);
+        if (!$exists) {
+            throw new ValidationError(sprintf('The selected %s is invalid.', $field));
+        }
     }
 }

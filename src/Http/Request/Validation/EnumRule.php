@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jotup\Http\Request\Validation;
 
 use BackedEnum;
+use Jotup\Exceptions\ValidationError;
 use Jotup\Http\Request\Request;
 
 final readonly class EnumRule implements RuleInterface
@@ -30,21 +31,20 @@ final readonly class EnumRule implements RuleInterface
         return $this->enumClass;
     }
 
-    public function validate(string $field, mixed $value, array $data, Request $request): ?string
+    public function validate(string $field, mixed $value, array $data, Request $request): void
     {
         if ($value === null) {
-            return null;
+            return;
         }
 
         if ($value instanceof $this->enumClass) {
-            return null;
+            return;
         }
 
         try {
             $this->enumClass::from($value);
-            return null;
         } catch (\Throwable) {
-            return sprintf('The %s field must be a valid enum value.', $field);
+            throw new ValidationError(sprintf('The %s field must be a valid enum value.', $field));
         }
     }
 }

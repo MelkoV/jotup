@@ -9,6 +9,7 @@ use Jotup\Application\Web;
 use Jotup\ExecutionScope\ExecutionScopeLogger;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use ReflectionClass;
 
 final class WebLoggerBootstrapTest extends TestCase
@@ -21,8 +22,18 @@ final class WebLoggerBootstrapTest extends TestCase
         $logger = $container->get(LoggerInterface::class);
         $aliasLogger = $container->get('logger');
 
-        $this->assertInstanceOf(ExecutionScopeLogger::class, $logger);
         $this->assertSame($logger, $aliasLogger);
+
+        if (defined('APP_TESTING') && APP_TESTING) {
+            $this->assertInstanceOf(NullLogger::class, $logger);
+
+            restore_error_handler();
+            restore_exception_handler();
+
+            return;
+        }
+
+        $this->assertInstanceOf(ExecutionScopeLogger::class, $logger);
 
         $reflection = new ReflectionClass($logger);
         $innerLoggerProperty = $reflection->getProperty('logger');

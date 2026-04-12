@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Api\Requests\Rules;
 
+use Jotup\Exceptions\ValidationError;
 use Jotup\Http\Request\Request;
 use Jotup\Http\Request\Validation\RuleInterface;
 
@@ -14,11 +15,11 @@ final class CheckCanDeleteList implements RuleInterface
         return 'can_delete_list';
     }
 
-    public function validate(string $field, mixed $value, array $data, Request $request): ?string
+    public function validate(string $field, mixed $value, array $data, Request $request): void
     {
         $db = $request->db();
         if ($db === null) {
-            return null;
+            return;
         }
 
         $row = $db->query()
@@ -27,14 +28,14 @@ final class CheckCanDeleteList implements RuleInterface
             ->one();
 
         if ($row === null) {
-            return 'The selected list is unavailable.';
+            throw new ValidationError('The selected list is unavailable.');
         }
 
         $userId = $request->userId();
         if ($userId === null || (string) $row['owner_id'] === $userId) {
-            return null;
+            return;
         }
 
-        return 'Only the list owner can delete this list.';
+        throw new ValidationError('Only the list owner can delete this list.');
     }
 }

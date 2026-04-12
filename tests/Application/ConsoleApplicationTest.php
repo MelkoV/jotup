@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Application;
 
-use App\Bootstrap;
+use App\Console\Bootstrap;
 use App\Console\Commands\AboutCommand;
 use App\Console\Commands\DbSmokeCommand;
 use App\Contracts\Repositories\ListRepositoryInterface;

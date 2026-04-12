@@ -6,6 +6,7 @@ namespace App\Console;
 
 use App\Console\Commands\AboutCommand;
 use App\Console\Commands\DbSmokeCommand;
+use App\ServiceProviders\AppServiceProvider;
 use App\ServiceProviders\DatabaseServiceProvider;
 use App\ServiceProviders\LogServiceProvider;
 use App\ServiceProviders\MigrateServiceProvider;
@@ -23,12 +24,14 @@ class Bootstrap implements \Jotup\Contracts\Bootstrap
 
     public function boot(Application|WithCommands $application): void
     {
-
+        $application->registerCommand(AboutCommand::class);
+        $application->registerCommand(DbSmokeCommand::class);
     }
 
     public function getServiceProviders(): array
     {
         return [
+            AppServiceProvider::class,
             LogServiceProvider::class,
             DatabaseServiceProvider::class,
             MigrateServiceProvider::class,

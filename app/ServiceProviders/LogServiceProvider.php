@@ -12,6 +12,7 @@ use Jotup\ExecutionScope\ExecutionScopeProviderInterface;
 use Jotup\Logger\Logger;
 use Jotup\Provider\ServiceProvider;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class LogServiceProvider implements ServiceProvider
 {
@@ -26,6 +27,15 @@ class LogServiceProvider implements ServiceProvider
             concrete: ExecutionScopeProvider::class,
             singleton: true
         );
+
+        if (defined('APP_TESTING') && APP_TESTING) {
+            $nullLogger = new NullLogger();
+            $container->bind(self::INNER_LOGGER_ID, $nullLogger);
+            $container->bind(LoggerInterface::class, $nullLogger);
+            $container->bind('logger', $nullLogger);
+
+            return;
+        }
 
         $container->bind(
             id: self::INNER_LOGGER_ID,

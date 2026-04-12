@@ -10,6 +10,7 @@ use Jotup\ErrorHandler;
 use Jotup\Logger\Logger;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
+use Psr\Log\NullLogger;
 use Symfony\Component\Console\Application as SymfonyConsoleApplication;
 use Symfony\Component\Console\Command\Command;
 
@@ -45,6 +46,12 @@ final class Console extends Base implements WithCommands
 
     protected function registerBootstrapLogger(): void
     {
+        if (defined('APP_TESTING') && APP_TESTING) {
+            $this->container->bind(LoggerInterface::class, new NullLogger());
+
+            return;
+        }
+
         $this->container->bind(
             id: LoggerInterface::class,
             concrete: Logger::class,

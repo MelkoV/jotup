@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Tests\Database;
 
 use App\Bootstrap;
+use App\Console\Bootstrap as ConsoleBootstrap;
 use App\Repositories\UserRepository;
+use Jotup\Application\Console;
 use Jotup\Application\Web;
 use Jotup\Database\DatabaseManager;
 use Jotup\Database\Db;
@@ -28,8 +30,6 @@ final class DatabaseServiceProviderTest extends TestCase
         $connection = $container->get(ConnectionInterface::class);
         $databaseManager = $container->get(DatabaseManager::class);
         $db = $container->get(Db::class);
-        $migrator = $container->get(Migrator::class);
-        $migrationService = $container->get(MigrationService::class);
         $userRepository = $container->make(UserRepository::class);
 
         $this->assertInstanceOf(CacheInterface::class, $cache);
@@ -37,11 +37,21 @@ final class DatabaseServiceProviderTest extends TestCase
         $this->assertInstanceOf(ConnectionInterface::class, $connection);
         $this->assertInstanceOf(DatabaseManager::class, $databaseManager);
         $this->assertInstanceOf(Db::class, $db);
-        $this->assertInstanceOf(Migrator::class, $migrator);
-        $this->assertInstanceOf(MigrationService::class, $migrationService);
         $this->assertInstanceOf(UserRepository::class, $userRepository);
         $this->assertSame($connection, $databaseManager->connection());
         $this->assertSame($connection, $db->connection());
+
+        restore_error_handler();
+        restore_exception_handler();
+    }
+
+    public function testMigrationServicesAreRegisteredOnlyInConsoleContainer(): void
+    {
+        $application = new Console(new ConsoleBootstrap());
+        $container = $application->getContainer();
+
+        $this->assertInstanceOf(Migrator::class, $container->get(Migrator::class));
+        $this->assertInstanceOf(MigrationService::class, $container->get(MigrationService::class));
 
         restore_error_handler();
         restore_exception_handler();

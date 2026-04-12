@@ -173,51 +173,57 @@ final readonly class ListRepository implements ListRepositoryInterface
 
     public function updateListItem(UpdateItemRequestData $data): ListItemData
     {
-        $item = $this->findListItemRecord($data->id, $data->version);
-        $attributes = $this->buildItemAttributesPayload($data);
+        return $this->db->transaction(function () use ($data): ListItemData {
+            $item = $this->lockListItemRecord($data->id, $data->version);
+            $attributes = $this->buildItemAttributesPayload($data);
 
-        $this->db->command()->update('{{%list_items}}', [
-            'name' => $data->name,
-            'description' => $data->description,
-            'data' => json_encode($attributes, JSON_THROW_ON_ERROR),
-            'version' => $data->version + 1,
-            'updated_at' => $this->now(),
-        ], ['id' => $data->id])->execute();
+            $this->db->command()->update('{{%list_items}}', [
+                'name' => $data->name,
+                'description' => $data->description,
+                'data' => json_encode($attributes, JSON_THROW_ON_ERROR),
+                'version' => $data->version + 1,
+                'updated_at' => $this->now(),
+            ], ['id' => $data->id])->execute();
 
-        $this->touch((string) $item['list_id']);
+            $this->touch((string) $item['list_id']);
 
-        return $this->findListItemView($data->id);
+            return $this->findListItemView($data->id);
+        });
     }
 
     public function completeListItem(string $listItemId, string $completeUserId): ListItemData
     {
-        $item = $this->findListItemRecord($listItemId);
+        return $this->db->transaction(function () use ($listItemId, $completeUserId): ListItemData {
+            $item = $this->lockListItemRecord($listItemId);
 
-        if ((bool) $item['is_completed'] === false) {
-            $this->db->command()->update('{{%list_items}}', [
-                'is_completed' => true,
-                'completed_at' => $this->now(),
-                'completed_user_id' => $completeUserId,
-                'updated_at' => $this->now(),
-            ], ['id' => $listItemId])->execute();
+            if ((bool) $item['is_completed'] === false) {
+                $this->db->command()->update('{{%list_items}}', [
+                    'is_completed' => true,
+                    'completed_at' => $this->now(),
+                    'completed_user_id' => $completeUserId,
+                    'updated_at' => $this->now(),
+                ], ['id' => $listItemId])->execute();
 
-            $this->touch((string) $item['list_id']);
-        }
+                $this->touch((string) $item['list_id']);
+            }
 
-        return $this->findListItemView($listItemId);
+            return $this->findListItemView($listItemId);
+        });
     }
 
     public function deleteListItem(DeleteItemRequestData $data): bool
     {
-        $item = $this->findListItemRecord($data->id, $data->version);
-        $affected = $this->db->command()->delete('{{%list_items}}', [
-            'id' => $data->id,
-            'version' => $data->version,
-        ])->execute();
+        return $this->db->transaction(function () use ($data): bool {
+            $item = $this->lockListItemRecord($data->id, $data->version);
+            $affected = $this->db->command()->delete('{{%list_items}}', [
+                'id' => $data->id,
+                'version' => $data->version,
+            ])->execute();
 
-        $this->touch((string) $item['list_id']);
+            $this->touch((string) $item['list_id']);
 
-        return $affected > 0;
+            return $affected > 0;
+        });
     }
 
     public function getListItems(string $listId): array
@@ -237,11 +243,17 @@ final readonly class ListRepository implements ListRepositoryInterface
     private function generateUniqueShortUrl(int $length = 10): string
     {
         do {
-            $token = substr(str_replace(['+', '/', '='], '', base64_encode(random_bytes($length))), 0, $length);
+            $token = $length
+                    |> random_bytes(...)
+                    |> base64_encode(...)
+                    |> (fn($x) => str_replace(['+', '/', '='], '', $x))
+                    |> (fn($x) => substr($x, 0, $length));
             $exists = $this->db->query()
                 ->from('{{%lists}}')
                 ->where(['short_url' => $token])
                 ->exists();
+
+            $length++;
         } while ($exists);
 
         return $token;
@@ -332,6 +344,26 @@ final readonly class ListRepository implements ListRepositoryInterface
         $row = $query->one();
 
         if ($row === null) {
+            throw new ListItemNotFoundException();
+        }
+
+        return $row;
+    }
+
+    private function lockListItemRecord(string $id, ?int $version = null): array
+    {
+        $sql = 'SELECT * FROM "list_items" WHERE "id" = :id';
+        $params = ['id' => $id];
+
+        if ($version !== null) {
+            $sql .= ' AND "version" = :version';
+            $params['version'] = $version;
+        }
+
+        $sql .= ' FOR UPDATE';
+        $row = $this->db->command($sql, $params)->queryOne();
+
+        if (!is_array($row)) {
             throw new ListItemNotFoundException();
         }
 

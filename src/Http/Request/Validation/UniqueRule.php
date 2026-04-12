@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jotup\Http\Request\Validation;
 
+use Jotup\Exceptions\ValidationError;
 use Jotup\Http\Request\Request;
 
 final readonly class UniqueRule implements RuleInterface
@@ -19,10 +20,10 @@ final readonly class UniqueRule implements RuleInterface
         return 'unique';
     }
 
-    public function validate(string $field, mixed $value, array $data, Request $request): ?string
+    public function validate(string $field, mixed $value, array $data, Request $request): void
     {
         if ($value === null || $request->db() === null) {
-            return null;
+            return;
         }
 
         $exists = $request->db()?->query()
@@ -30,6 +31,8 @@ final readonly class UniqueRule implements RuleInterface
             ->where([$this->column => $value])
             ->exists();
 
-        return $exists ? sprintf('The %s has already been taken.', $field) : null;
+        if ($exists) {
+            throw new ValidationError(sprintf('The %s has already been taken.', $field));
+        }
     }
 }

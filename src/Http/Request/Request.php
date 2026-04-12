@@ -7,6 +7,7 @@ namespace Jotup\Http\Request;
 use BackedEnum;
 use DateTime;
 use Jotup\Database\Db;
+use Jotup\Exceptions\ValidationError;
 use Jotup\ExecutionScope\ExecutionScopeProviderInterface;
 use Jotup\Http\Exception\ValidationException;
 use Jotup\Http\Request\Validation\EnumRule;
@@ -29,7 +30,7 @@ abstract class Request
     ) {
         $this->data = $this->extractData();
         $this->prepareForValidation();
-        $this->validated = $this->validateData();
+        $this->validateData();
     }
 
     /**
@@ -117,7 +118,7 @@ abstract class Request
     /**
      * @return array<string, mixed>
      */
-    private function validateData(): array
+    private function validateData(): void
     {
         $errors = [];
         $validated = [];
@@ -147,21 +148,21 @@ abstract class Request
                 $message = null;
                 $ruleName = '';
 
-                if (is_string($rule)) {
-                    [$ruleName] = explode(':', $rule, 2);
-                    $message = $this->validateStringRule($field, $value, $rule);
-                } else {
-                    $ruleName = $rule->name();
-                    $message = $rule->validate($field, $value, $this->data, $this);
+                try {
+                    if (is_string($rule)) {
+                        [$ruleName] = explode(':', $rule, 2);
+                        $this->validateStringRule($field, $value, $rule);
+                    } else {
+                        $ruleName = $rule->name();
+                        $rule->validate($field, $value, $this->data, $this);
 
-                    if ($message === null && $rule instanceof EnumRule && !$value instanceof BackedEnum) {
-                        $enumClass = $rule->enumClass();
-                        $value = $enumClass::from($value);
+                        if ($rule instanceof EnumRule && !$value instanceof BackedEnum) {
+                            $enumClass = $rule->enumClass();
+                            $value = $enumClass::from($value);
+                        }
                     }
-                }
-
-                if ($message !== null) {
-                    $errors[$field][] = $messages[$field . '.' . $ruleName] ?? $message;
+                } catch (ValidationError $error) {
+                    $errors[$field][] = $messages[$field . '.' . $ruleName] ?? $error->getMessage();
                     if ($bail) {
                         break;
                     }
@@ -185,103 +186,92 @@ abstract class Request
             throw new ValidationException($errors, $firstError ?? 'Validation failed');
         }
 
-        return $validated;
+        $this->validated = $validated;
     }
 
-    private function validateStringRule(string $field, mixed &$value, string $rule): ?string
+    private function validateStringRule(string $field, mixed &$value, string $rule): void
     {
         [$ruleName, $options] = array_pad(explode(':', $rule, 2), 2, null);
 
-        return match ($ruleName) {
-            'string' => is_string($value) ? null : sprintf('The %s field must be a string.', $field),
+        match ($ruleName) {
+            'string' => is_string($value) ? null : throw new ValidationError(sprintf('The %s field must be a string.', $field)),
             'boolean' => $this->validateBoolean($field, $value),
             'integer' => $this->validateInteger($field, $value),
-            'uuid' => Uuid::isValid((string) $value) ? null : sprintf('The %s field must be a valid UUID.', $field),
-            'email' => filter_var($value, FILTER_VALIDATE_EMAIL) ? null : sprintf('The %s field must be a valid email address.', $field),
+            'uuid' => Uuid::isValid((string) $value) ? null : throw new ValidationError(sprintf('The %s field must be a valid UUID.', $field)),
+            'email' => filter_var($value, FILTER_VALIDATE_EMAIL) ? null : throw new ValidationError(sprintf('The %s field must be a valid email address.', $field)),
             'date' => $this->validateDate($field, $value),
             'min' => $this->validateMin($field, $value, (int) $options),
             'max' => $this->validateMax($field, $value, (int) $options),
             'decimal' => $this->validateDecimal($field, $value, $options ?? '0,0'),
-            'confirmed' => ($this->data[$options ?? ''] ?? null) == $value ? null : sprintf('The %s field confirmation does not match.', $field),
+            'confirmed' => ($this->data[$options ?? ''] ?? null) == $value ? null : throw new ValidationError(sprintf('The %s field confirmation does not match.', $field)),
             default => null,
         };
     }
 
-    private function validateBoolean(string $field, mixed &$value): ?string
+    private function validateBoolean(string $field, mixed &$value): void
     {
         $normalized = filter_var($value, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE);
         if ($normalized === null && !in_array($value, [0, 1, '0', '1'], true)) {
-            return sprintf('The %s field must be true or false.', $field);
+            throw new ValidationError(sprintf('The %s field must be true or false.', $field));
         }
 
         $value = $normalized ?? in_array($value, [1, '1'], true);
-
-        return null;
     }
 
-    private function validateInteger(string $field, mixed &$value): ?string
+    private function validateInteger(string $field, mixed &$value): void
     {
         if (filter_var($value, FILTER_VALIDATE_INT) === false) {
-            return sprintf('The %s field must be an integer.', $field);
+            throw new ValidationError(sprintf('The %s field must be an integer.', $field));
         }
 
         $value = (int) $value;
-
-        return null;
     }
 
-    private function validateDate(string $field, mixed &$value): ?string
+    private function validateDate(string $field, mixed &$value): void
     {
         try {
             $value = $value instanceof DateTime ? $value : new DateTime((string) $value);
-            return null;
         } catch (\Throwable) {
-            return sprintf('The %s field must be a valid date.', $field);
+            throw new ValidationError(sprintf('The %s field must be a valid date.', $field));
         }
     }
 
-    private function validateMin(string $field, mixed $value, int $min): ?string
+    private function validateMin(string $field, mixed $value, int $min): void
     {
         if (is_string($value) && mb_strlen($value) < $min) {
-            return sprintf('The %s field must be at least %d characters.', $field, $min);
+            throw new ValidationError(sprintf('The %s field must be at least %d characters.', $field, $min));
         }
 
         if ((is_int($value) || is_float($value)) && $value < $min) {
-            return sprintf('The %s field must be at least %d.', $field, $min);
+            throw new ValidationError(sprintf('The %s field must be at least %d.', $field, $min));
         }
-
-        return null;
     }
 
-    private function validateMax(string $field, mixed $value, int $max): ?string
+    private function validateMax(string $field, mixed $value, int $max): void
     {
         if (is_string($value) && mb_strlen($value) > $max) {
-            return sprintf('The %s field must not be greater than %d characters.', $field, $max);
+            throw new ValidationError(sprintf('The %s field must not be greater than %d characters.', $field, $max));
         }
 
         if ((is_int($value) || is_float($value)) && $value > $max) {
-            return sprintf('The %s field must not be greater than %d.', $field, $max);
+            throw new ValidationError(sprintf('The %s field must not be greater than %d.', $field, $max));
         }
-
-        return null;
     }
 
-    private function validateDecimal(string $field, mixed &$value, string $range): ?string
+    private function validateDecimal(string $field, mixed &$value, string $range): void
     {
         [$min, $max] = array_map('intval', explode(',', $range));
         $string = (string) $value;
 
         if (!preg_match('/^-?\d+(?:\.(\d+))?$/', $string, $matches)) {
-            return sprintf('The %s field must be a decimal number.', $field);
+            throw new ValidationError(sprintf('The %s field must be a decimal number.', $field));
         }
 
         $decimals = isset($matches[1]) ? strlen($matches[1]) : 0;
         if ($decimals < $min || $decimals > $max) {
-            return sprintf('The %s field must have between %d and %d decimal places.', $field, $min, $max);
+            throw new ValidationError(sprintf('The %s field must have between %d and %d decimal places.', $field, $min, $max));
         }
 
         $value = (float) $string;
-
-        return null;
     }
 }

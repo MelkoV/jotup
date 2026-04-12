@@ -21,6 +21,7 @@ use Jotup\Logger\Logger;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
+use Psr\Log\NullLogger;
 
 class Web extends Base implements WithMiddleware
 {
@@ -84,6 +85,12 @@ class Web extends Base implements WithMiddleware
 
     protected function registerBootstrapLogger(): void
     {
+        if (defined('APP_TESTING') && APP_TESTING) {
+            $this->container->bind(LoggerInterface::class, new NullLogger());
+
+            return;
+        }
+
         $this->container->bind(
             id: LoggerInterface::class,
             concrete: Logger::class,
