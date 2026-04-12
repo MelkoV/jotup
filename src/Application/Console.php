@@ -68,6 +68,10 @@ final class Console extends Base implements WithCommands
     protected function bootApplication(): void
     {
         foreach ($this->bootstrap->routes() as $route) {
+            if (!is_string($route) || !class_exists($route) || !is_a($route, Command::class, true)) {
+                continue;
+            }
+
             $this->registerCommand($route);
         }
     }

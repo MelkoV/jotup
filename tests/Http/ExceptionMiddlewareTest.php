@@ -51,7 +51,7 @@ final class ExceptionMiddlewareTest extends TestCase
         );
 
         $this->assertSame(404, $response->getStatusCode());
-        $this->assertStringContainsString('"error": "Missing"', (string) $response->getBody());
+        $this->assertStringContainsString('"message": "Missing"', (string) $response->getBody());
     }
 }
 

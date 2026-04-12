@@ -7,7 +7,9 @@ namespace Tests\Application;
 use App\Bootstrap;
 use App\Console\Commands\AboutCommand;
 use App\Console\Commands\DbSmokeCommand;
+use App\Contracts\Repositories\ListRepositoryInterface;
 use App\Contracts\Repositories\UserRepositoryInterface;
+use App\Repositories\ListRepository;
 use App\Repositories\UserRepository;
 use Jotup\Application\Console;
 use PHPUnit\Framework\TestCase;
@@ -49,8 +51,10 @@ final class ConsoleApplicationTest extends TestCase
     {
         $application = new Console(new Bootstrap());
         $repository = $application->getContainer()->get(UserRepositoryInterface::class);
+        $listRepository = $application->getContainer()->get(ListRepositoryInterface::class);
 
         $this->assertInstanceOf(UserRepository::class, $repository);
+        $this->assertInstanceOf(ListRepository::class, $listRepository);
 
         restore_error_handler();
         restore_exception_handler();

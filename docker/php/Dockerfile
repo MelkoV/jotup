@@ -2,10 +2,10 @@ FROM php:8.5-fpm
 
 LABEL maintainer="ant-smorodin@ya.ru"
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git \
-    curl \
-    wget \
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+    $PHPIZE_DEPS \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
@@ -15,11 +15,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libicu-dev \
     zlib1g-dev \
     libpq-dev \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) \
+    ; \
+    docker-php-ext-configure gd --with-freetype --with-jpeg; \
+    docker-php-ext-install -j"$(nproc)" \
         pdo_mysql \
         pdo_pgsql \
         mbstring \
@@ -29,9 +27,12 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
         gd \
         zip \
         intl \
-    && pecl install apcu \
-    && docker-php-ext-enable apcu \
-    && echo "apc.enable_cli=1" > /usr/local/etc/php/conf.d/apcu-cli.ini
+    ; \
+    pecl install apcu; \
+    docker-php-ext-enable apcu; \
+    echo "apc.enable_cli=1" > /usr/local/etc/php/conf.d/apcu-cli.ini; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/* /tmp/pear ~/.pearrc
 
 COPY --from=composer:2.9.5 /usr/bin/composer /usr/bin/composer
 

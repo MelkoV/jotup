@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jotup\Http\Response;
 
 use Jotup\Http\Exception\HttpException;
+use Jotup\Http\Exception\ValidationException;
 use Jotup\Http\Response\Result\EmptyResult;
 use Jotup\Http\Response\Result\HtmlResult;
 use Jotup\Http\Response\Result\JsonResult;
@@ -69,6 +70,13 @@ class Responder
 
     public function fromThrowable(\Throwable $throwable): ResponseInterface
     {
+        if ($throwable instanceof ValidationException) {
+            return $this->json([
+                'message' => $throwable->getMessage(),
+                'errors' => $throwable->getErrors(),
+            ], $throwable->getStatusCode());
+        }
+
         if ($throwable instanceof HttpException) {
             return $this->fromHttpException($throwable);
         }
@@ -154,9 +162,7 @@ class Responder
         }
 
         return $this->json([
-            'ok' => false,
-            'error' => $message,
-            'status' => $status,
+            'message' => $message,
         ], $status, $exception->getHeaders());
     }
 }

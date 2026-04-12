@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Jotup\Http\Dispatcher;
 
 use Jotup\Container\Container;
+use Jotup\Http\Request\ServerRequest;
 use Jotup\Http\Response\Responder;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 class ControllerDispatcher
 {
@@ -21,6 +23,16 @@ class ControllerDispatcher
      */
     public function dispatch(string $controller, string $action, array $arguments = []): ResponseInterface
     {
+        if (($arguments['request'] ?? null) instanceof ServerRequestInterface) {
+            /** @var ServerRequestInterface $request */
+            $request = $arguments['request'];
+            $this->container->bind(ServerRequestInterface::class, $request);
+
+            if ($request instanceof ServerRequest) {
+                $this->container->bind(ServerRequest::class, $request);
+            }
+        }
+
         $instance = $this->container->make($controller);
         $result = $this->container->makeMethod($instance, $action, $arguments);
 

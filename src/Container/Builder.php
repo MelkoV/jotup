@@ -195,6 +195,10 @@ final class Builder
         try {
             return $concreteClass->newInstanceArgs($args);
         } catch (Throwable $e) {
+            if ($e instanceof \Jotup\Http\Exception\ValidationException) {
+                throw $e;
+            }
+
             throw new InstancingException(
                 sprintf('Can not create instance of class %s: %s', $concrete, $e->getMessage()),
                 (int) $e->getCode(),
@@ -228,25 +232,47 @@ final class Builder
                     }
 
                     if (is_object($paramValue)) {
-                        if (!is_a($paramValue, $type->getName())) {
+                        if (
+                            $paramValue instanceof \Psr\Http\Message\ServerRequestInterface
+                            && is_a($type->getName(), \Jotup\Http\Request\Request::class, true)
+                        ) {
+                            $hasValue = false;
+                        }
+
+                        if (!$hasValue) {
+                            // Fall through to class autowiring below for validated request objects.
+                        } elseif (!is_a($paramValue, $type->getName())) {
                             throw new InvalidArgumentException(sprintf(
                                 'Parameter $%s must be instance of %s.',
                                 $paramName,
                                 $type->getName()
                             ));
+                        } else {
+                            $args[] = $paramValue;
+                            continue;
                         }
-
-                        $args[] = $paramValue;
-                        continue;
                     }
 
-                    if (!is_array($paramValue)) {
+                    if ($hasValue && !is_array($paramValue)) {
                         throw new InvalidArgumentException(sprintf(
                             'Parameter $%s must be instance of %s or an array of nested constructor values.',
                             $paramName,
                             $type->getName()
                         ));
                     }
+
+                    if (
+                        $hasValue
+                        && is_object($paramValue)
+                        && !is_a($paramValue, $type->getName())
+                    ) {
+                        throw new InvalidArgumentException(sprintf(
+                            'Parameter $%s must be instance of %s.',
+                            $paramName,
+                            $type->getName()
+                        ));
+                    }
+
                 }
 
                 if (!$hasValue && $this->container->has($paramName)) {
@@ -266,6 +292,16 @@ final class Builder
 
                 if (!$hasValue && $this->hasMatchingPositionalObject($positionalValues, $type->getName())) {
                     $args[] = array_shift($positionalValues);
+                    continue;
+                }
+
+                if (
+                    !$hasValue
+                    && $param->isDefaultValueAvailable()
+                    && $type->allowsNull()
+                    && !$this->container->has($type->getName())
+                ) {
+                    $args[] = $param->getDefaultValue();
                     continue;
                 }
 

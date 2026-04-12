@@ -71,7 +71,8 @@ class ServerRequest extends ClientRequest implements ServerRequestInterface
             fragment: '',
         );
 
-        $body = new Stream(content: (string)file_get_contents('php://input'));
+        $rawBody = (string) file_get_contents('php://input');
+        $body = new Stream(content: $rawBody);
 
         return new self(
             serverParams: $server,
@@ -83,7 +84,7 @@ class ServerRequest extends ClientRequest implements ServerRequestInterface
             cookieParams: $_COOKIE,
             queryParams: $_GET,
             uploadedFiles: self::marshalUploadedFiles($_FILES),
-            parsedBody: self::detectParsedBody($method),
+            parsedBody: self::detectParsedBody($server, $method, $rawBody),
         );
     }
 
@@ -325,8 +326,32 @@ class ServerRequest extends ClientRequest implements ServerRequestInterface
         return (string)($server['QUERY_STRING'] ?? '');
     }
 
-    private static function detectParsedBody(string $method): mixed
+    /**
+     * @param array<string, mixed> $server
+     */
+    private static function detectParsedBody(array $server, string $method, string $rawBody): mixed
     {
-        return in_array(strtoupper($method), ['POST', 'PUT', 'PATCH', 'DELETE'], true) ? $_POST : null;
+        if (!in_array(strtoupper($method), ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
+            return null;
+        }
+
+        if ($_POST !== []) {
+            return $_POST;
+        }
+
+        $contentType = strtolower((string) ($server['CONTENT_TYPE'] ?? $server['HTTP_CONTENT_TYPE'] ?? ''));
+        $contentType = trim(explode(';', $contentType, 2)[0]);
+
+        if ($contentType === 'application/json') {
+            if (trim($rawBody) === '') {
+                return null;
+            }
+
+            $decoded = json_decode($rawBody, true);
+
+            return is_array($decoded) ? $decoded : null;
+        }
+
+        return null;
     }
 }

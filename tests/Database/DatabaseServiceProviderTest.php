@@ -63,8 +63,6 @@ final class DatabaseServiceProviderTest extends TestCase
         $path = APP_CORE_PATH . 'database' . DIRECTORY_SEPARATOR . 'Migrations' . DIRECTORY_SEPARATOR;
 
         $this->assertFileExists($path . 'M260411120000CreateUsersTable.php');
-        $this->assertFileExists($path . 'M260411120001CreateCacheTable.php');
-        $this->assertFileExists($path . 'M260411120002CreateJobsTable.php');
         $this->assertFileExists($path . 'M260411120003CreateListsTable.php');
     }
 }

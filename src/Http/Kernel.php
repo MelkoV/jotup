@@ -32,8 +32,8 @@ class Kernel
         $pipeline = new MiddlewarePipeline(
             $this->notFoundHandler,
             [
-                $this->exceptionMiddleware,
                 ...$this->middleware,
+                $this->exceptionMiddleware,
                 $this->routingMiddleware,
                 $this->dispatchMiddleware,
             ]
