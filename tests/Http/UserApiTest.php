@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Http;
 
+use App\Data\User\SignUpData;
 use App\Enums\JwtTokenType;
 use App\Enums\UserDevice;
 use App\Enums\UserStatus;
@@ -75,6 +76,7 @@ final class UserApiTest extends ApiTestCase
         $this->assertSame($email, $payload['user']['email']);
         $this->assertSame('Anton', $payload['user']['name']);
         $this->assertSame(UserStatus::Active->value, $payload['user']['status']);
+        $this->assertNull($payload['user']['avatar']);
         $this->assertIsString($payload['token']);
         $this->assertStringContainsString('refresh_token=', $response->getHeaderLine('Set-Cookie'));
     }
@@ -168,6 +170,7 @@ final class UserApiTest extends ApiTestCase
         $this->assertSame($user->id, $payload['user']['id']);
         $this->assertSame($user->email, $payload['user']['email']);
         $this->assertSame('Anton', $payload['user']['name']);
+        $this->assertNull($payload['user']['avatar']);
         $this->assertIsString($payload['token']);
         $this->assertStringContainsString('refresh_token=', $response->getHeaderLine('Set-Cookie'));
     }
@@ -205,7 +208,13 @@ final class UserApiTest extends ApiTestCase
 
     public function testProfileReturnsAuthenticatedUser(): void
     {
-        $user = $this->createUser(name: 'Anton');
+        $user = $this->userService()->signUp(new SignUpData(
+            email: $this->uniqueEmail(),
+            password: 'password123',
+            name: 'Anton',
+            device: UserDevice::Web,
+            device_id: 'profile-device',
+        ));
 
         $response = $this->getJson(
             '/api/v1/user/profile',
@@ -217,6 +226,7 @@ final class UserApiTest extends ApiTestCase
         $this->assertSame($user->id, $payload['id']);
         $this->assertSame($user->email, $payload['email']);
         $this->assertSame('Anton', $payload['name']);
+        $this->assertNull($payload['avatar']);
     }
 
     public function testRefreshTokenRejectsMissingCookie(): void
@@ -243,7 +253,13 @@ final class UserApiTest extends ApiTestCase
 
     public function testRefreshTokenReturnsFreshCredentials(): void
     {
-        $user = $this->createUser(name: 'Anton');
+        $user = $this->userService()->signUp(new SignUpData(
+            email: $this->uniqueEmail(),
+            password: 'password123',
+            name: 'Anton',
+            device: UserDevice::Web,
+            device_id: 'refresh-device',
+        ));
 
         $response = $this->postJson(
             '/api/v1/user/refresh-token',
@@ -253,6 +269,7 @@ final class UserApiTest extends ApiTestCase
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame($user->id, $payload['user']['id']);
+        $this->assertNull($payload['user']['avatar']);
         $this->assertIsString($payload['token']);
         $this->assertStringContainsString('refresh_token=', $response->getHeaderLine('Set-Cookie'));
     }

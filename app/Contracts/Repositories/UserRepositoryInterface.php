@@ -16,5 +16,7 @@ interface UserRepositoryInterface
 
     public function findByEmail(string $email): UserData;
 
+    public function updateAvatar(UserData $user, ?string $avatar): UserData;
+
     public function upsertDevice(UserData $data, UserDevice $device, ?string $deviceId = null): void;
 }

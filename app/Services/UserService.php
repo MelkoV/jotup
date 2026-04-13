@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Contracts\Repositories\UserRepositoryInterface;
+use App\Contracts\Services\AvatarUrlServiceContract;
 use App\Contracts\Services\UserServiceContract;
 use App\Data\User\SignInData;
 use App\Data\User\SignUpData;
@@ -17,14 +18,16 @@ final readonly class UserService implements UserServiceContract
 {
     public function __construct(
         private UserRepositoryInterface $userRepository,
+        private AvatarUrlServiceContract $avatarUrlService,
         private Db $db,
     ) {
     }
 
     public function signUp(SignUpData $data): UserData
     {
-        // Repository already creates the initial device binding.
-        return $this->userRepository->create($data);
+        $user = $this->userRepository->create($data);
+
+        return $this->persistAvatar($user);
     }
 
     public function signIn(SignInData $data): UserData
@@ -40,6 +43,7 @@ final readonly class UserService implements UserServiceContract
         }
 
         $user = $this->userRepository->findById((string) $row['id']);
+        $user = $this->persistAvatar($user);
         $this->attachDevice($user, $data->device, $data->device_id);
 
         return $user;
@@ -53,6 +57,13 @@ final readonly class UserService implements UserServiceContract
     public function profile(string $userId): UserData
     {
         return $this->userRepository->findById($userId);
+    }
+
+    private function persistAvatar(UserData $user): UserData
+    {
+        $avatar = $this->avatarUrlService->getAvatarUrl($user);
+
+        return $this->userRepository->updateAvatar($user, $avatar);
     }
 
     private function passwordMatches(string $plainPassword, string $storedPassword): bool

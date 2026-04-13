@@ -6,10 +6,12 @@ namespace Tests\Application;
 
 use App\Contracts\Repositories\ListRepositoryInterface;
 use App\Contracts\Repositories\UserRepositoryInterface;
+use App\Contracts\Services\AvatarUrlServiceContract;
 use App\Contracts\Services\ListServiceContract;
 use App\Contracts\Services\UserServiceContract;
 use App\Repositories\ListRepository;
 use App\Repositories\UserRepository;
+use App\Services\GravatarAvatarUrlService;
 use App\ServiceProviders\AppServiceProvider;
 use App\Services\ListService;
 use App\Services\UserService;
@@ -60,6 +62,7 @@ final class AppServiceProviderRepositoriesTest extends TestCase
 
         $this->assertInstanceOf(UserRepository::class, $container->get(UserRepositoryInterface::class));
         $this->assertInstanceOf(ListRepository::class, $container->get(ListRepositoryInterface::class));
+        $this->assertInstanceOf(GravatarAvatarUrlService::class, $container->get(AvatarUrlServiceContract::class));
         $this->assertInstanceOf(UserService::class, $container->get(UserServiceContract::class));
         $this->assertInstanceOf(ListService::class, $container->get(ListServiceContract::class));
     }

@@ -51,6 +51,11 @@ final class JwtMiddlewareTest extends TestCase
                     throw new \BadMethodCallException();
                 }
 
+                public function updateAvatar(UserData $user, ?string $avatar): UserData
+                {
+                    return new UserData($user->email, $user->name, $user->status, $user->id, $avatar);
+                }
+
                 public function upsertDevice(UserData $data, \App\Enums\UserDevice $device, ?string $deviceId = null): void
                 {
                 }
@@ -105,6 +110,11 @@ final class JwtMiddlewareTest extends TestCase
                     throw new \BadMethodCallException();
                 }
 
+                public function updateAvatar(UserData $user, ?string $avatar): UserData
+                {
+                    return new UserData($user->email, $user->name, $user->status, $user->id, $avatar);
+                }
+
                 public function upsertDevice(UserData $data, \App\Enums\UserDevice $device, ?string $deviceId = null): void
                 {
                 }
@@ -152,6 +162,11 @@ final class JwtMiddlewareTest extends TestCase
                 public function findByEmail(string $email): UserData
                 {
                     throw new \BadMethodCallException();
+                }
+
+                public function updateAvatar(UserData $user, ?string $avatar): UserData
+                {
+                    return new UserData($user->email, $user->name, $user->status, $user->id, $avatar);
                 }
 
                 public function upsertDevice(UserData $data, \App\Enums\UserDevice $device, ?string $deviceId = null): void

@@ -60,6 +60,7 @@ final class UserServiceTest extends DatabaseTestCase
         $this->assertSame($user->id, $this->users()->findByEmail($user->email)->id);
         $this->assertNotSame('password123', $this->getPasswordHash($user->id));
         $this->assertTrue(password_verify('password123', $this->getPasswordHash($user->id)));
+        $this->assertNull($user->avatar);
     }
 
     public function testUserRepositoryThrowsForMissingUser(): void
@@ -90,6 +91,8 @@ final class UserServiceTest extends DatabaseTestCase
         $this->assertSame($user->id, $signedIn->id);
         $this->assertSame($user->id, $profile->id);
         $this->assertSame($user->email, $profile->email);
+        $this->assertNull($signedIn->avatar);
+        $this->assertNull($profile->avatar);
     }
 
     public function testUserServiceRejectsInvalidCredentials(): void

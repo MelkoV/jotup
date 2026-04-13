@@ -6,9 +6,11 @@ namespace App\ServiceProviders;
 
 use App\Contracts\Repositories\ListRepositoryInterface;
 use App\Contracts\Repositories\UserRepositoryInterface;
+use App\Contracts\Services\AvatarUrlServiceContract;
 use App\Contracts\Services\JwtServiceContract;
 use App\Contracts\Services\ListServiceContract;
 use App\Contracts\Services\UserServiceContract;
+use App\Services\GravatarAvatarUrlService;
 use App\Repositories\ListRepository;
 use App\Repositories\UserRepository;
 use App\Services\JwtService;
@@ -36,6 +38,12 @@ class AppServiceProvider implements ServiceProvider
         $application->getContainer()->bind(
             id: JwtServiceContract::class,
             concrete: JwtService::class,
+            singleton: true,
+        );
+
+        $application->getContainer()->bind(
+            id: AvatarUrlServiceContract::class,
+            concrete: GravatarAvatarUrlService::class,
             singleton: true,
         );
 

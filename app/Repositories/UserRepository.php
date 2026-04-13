@@ -80,6 +80,16 @@ final readonly class UserRepository implements UserRepositoryInterface
         return $this->hydrateUser($row);
     }
 
+    public function updateAvatar(UserData $user, ?string $avatar): UserData
+    {
+        $this->db->command()->update('{{%users}}', [
+            'avatar' => $avatar,
+            'updated_at' => (new DateTime())->format('Y-m-d H:i:s'),
+        ], ['id' => $user->id])->execute();
+
+        return $this->findById($user->id);
+    }
+
     public function upsertDevice(UserData $data, UserDevice $device, ?string $deviceId = null): void
     {
         $now = new DateTime()->format('Y-m-d H:i:s');
