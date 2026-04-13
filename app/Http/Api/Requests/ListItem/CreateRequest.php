@@ -19,6 +19,7 @@ final class CreateRequest extends Request
             'user_id' => ['required', 'uuid'],
             'list_id' => ['required', 'uuid', 'bail', new CheckCanEditList()],
             'name' => ['required', 'string', 'min:1', 'max:100'],
+            'is_completed' => ['boolean'],
             'priority' => ['nullable', Rule::enum(TodoPriority::class)],
             'description' => ['nullable', 'string', 'max:250'],
             'unit' => ['nullable', Rule::enum(ProductUnit::class)],
@@ -36,6 +37,7 @@ final class CreateRequest extends Request
 
         $this->merge([
             'user_id' => $this->userId(),
+            'is_completed' => $this->input('is_completed', $attributes['is_completed'] ?? false),
             'priority' => $this->input('priority', $attributes['priority'] ?? null),
             'description' => $this->input('description', $attributes['description'] ?? null),
             'unit' => $this->input('unit', $attributes['unit'] ?? null),

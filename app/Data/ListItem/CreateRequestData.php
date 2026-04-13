@@ -14,6 +14,7 @@ final class CreateRequestData extends Data
         public readonly string $user_id,
         public readonly string $list_id,
         public readonly string $name,
+        public readonly bool $is_completed = false,
         public readonly ?TodoPriority $priority = null,
         public readonly ?string $description = null,
         public readonly ?ProductUnit $unit = null,

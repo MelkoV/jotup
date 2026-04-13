@@ -511,6 +511,34 @@ final class ListsApiTest extends ApiTestCase
         $this->assertStringStartsWith('2026-04-13', $payload['attributes']['deadline']);
     }
 
+    public function testCreateListItemCanBeCreatedAsCompleted(): void
+    {
+        $owner = $this->createUser(name: 'Owner');
+        $list = $this->createList($owner->id);
+
+        $response = $this->postJson('/api/v1/list-items', [
+            'name' => 'Milk',
+            'list_id' => $list->id,
+            'is_completed' => true,
+        ], $this->withBearer($this->makeJwtToken($owner->id)));
+        $payload = $this->decodeJson($response);
+
+        $this->assertSame(201, $response->getStatusCode());
+        $this->assertTrue($payload['is_completed']);
+        $this->assertSame('Owner', $payload['completed_user_name']);
+        $this->assertSame(1, $payload['version']);
+
+        $row = $this->db->query()
+            ->from('{{%list_items}}')
+            ->where(['id' => $payload['id']])
+            ->one();
+
+        $this->assertIsArray($row);
+        $this->assertTrue((bool) $row['is_completed']);
+        $this->assertSame($owner->id, $row['completed_user_id']);
+        $this->assertNotNull($row['completed_at']);
+    }
+
     public function testUpdateListItemRejectsWrongVersion(): void
     {
         $owner = $this->createUser();
