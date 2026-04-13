@@ -13,6 +13,8 @@ final class ListViewData extends Data
         public readonly ListData $model,
         /** @var list<ListItemData> */
         public readonly array $items,
+        /** @var list<ListMemberData> */
+        public readonly array $members = [],
     ) {
     }
 }

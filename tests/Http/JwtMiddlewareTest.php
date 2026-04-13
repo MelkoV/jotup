@@ -51,6 +51,11 @@ final class JwtMiddlewareTest extends TestCase
                     throw new \BadMethodCallException();
                 }
 
+                public function findAuthByEmail(string $email): array
+                {
+                    throw new \BadMethodCallException();
+                }
+
                 public function updateAvatar(UserData $user, ?string $avatar): UserData
                 {
                     return new UserData($user->email, $user->name, $user->status, $user->id, $avatar);
@@ -110,6 +115,11 @@ final class JwtMiddlewareTest extends TestCase
                     throw new \BadMethodCallException();
                 }
 
+                public function findAuthByEmail(string $email): array
+                {
+                    throw new \BadMethodCallException();
+                }
+
                 public function updateAvatar(UserData $user, ?string $avatar): UserData
                 {
                     return new UserData($user->email, $user->name, $user->status, $user->id, $avatar);
@@ -160,6 +170,11 @@ final class JwtMiddlewareTest extends TestCase
                 }
 
                 public function findByEmail(string $email): UserData
+                {
+                    throw new \BadMethodCallException();
+                }
+
+                public function findAuthByEmail(string $email): array
                 {
                     throw new \BadMethodCallException();
                 }

@@ -10,8 +10,10 @@ use App\Data\User\JwtTokenData;
 use App\Data\User\UserData;
 use App\Enums\JwtTokenType;
 use App\Exceptions\UserNotFoundException;
+use App\Http\Api\Requests\User\ChangePasswordRequest;
 use App\Http\Api\Requests\User\SignInRequest;
 use App\Http\Api\Requests\User\SignUpRequest;
+use App\Http\Api\Requests\User\UpdateProfileRequest;
 use Jotup\Config;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -61,6 +63,18 @@ final class UserController extends Controller
     public function profile(ServerRequestInterface $request): array
     {
         return $this->userService->profile($this->userId($request))->toArray();
+    }
+
+    public function updateProfile(UpdateProfileRequest $request): array
+    {
+        return $this->userService->updateProfile($request->toData())->toArray();
+    }
+
+    public function changePassword(ChangePasswordRequest $request): array
+    {
+        $this->userService->changePassword($request->toData());
+
+        return ['success' => true];
     }
 
     private function responseUserDataWithTokens(UserData $user): \Jotup\Http\Response\Result\JsonResult

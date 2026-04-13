@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Http;
 
+use App\Exceptions\RecordNotFoundException;
 use Jotup\Http\Exception\HttpException;
 use Jotup\Http\Factory\HttpFactory;
 use Jotup\Http\Middleware\ExceptionMiddleware;
@@ -52,6 +53,23 @@ final class ExceptionMiddlewareTest extends TestCase
 
         $this->assertSame(404, $response->getStatusCode());
         $this->assertStringContainsString('"message": "Missing"', (string) $response->getBody());
+    }
+
+    public function testRecordNotFoundExceptionIsConvertedToJson404Response(): void
+    {
+        $factory = new HttpFactory();
+        $middleware = new ExceptionMiddleware(
+            new Responder($factory, $factory),
+            new InMemoryLogger(),
+        );
+
+        $response = $middleware->process(
+            $factory->createServerRequest('GET', '/missing-record'),
+            new ThrowingHandler(new RecordNotFoundException('Record missing')),
+        );
+
+        $this->assertSame(404, $response->getStatusCode());
+        $this->assertStringContainsString('"message": "Record missing"', (string) $response->getBody());
     }
 }
 

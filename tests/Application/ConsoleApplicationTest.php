@@ -6,6 +6,7 @@ namespace Tests\Application;
 
 use App\Console\Bootstrap;
 use App\Console\Commands\AboutCommand;
+use App\Console\Commands\ConsumeAvatarQueueCommand;
 use App\Console\Commands\DbSmokeCommand;
 use App\Contracts\Repositories\ListRepositoryInterface;
 use App\Contracts\Repositories\UserRepositoryInterface;
@@ -36,6 +37,7 @@ final class ConsoleApplicationTest extends TestCase
 
         $this->assertContains(AboutCommand::class, $commandClasses);
         $this->assertContains(DbSmokeCommand::class, $commandClasses);
+        $this->assertContains(ConsumeAvatarQueueCommand::class, $commandClasses);
         $this->assertContains(CreateCommand::class, $commandClasses);
         $this->assertContains(DownCommand::class, $commandClasses);
         $this->assertContains(HistoryCommand::class, $commandClasses);

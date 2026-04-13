@@ -8,6 +8,7 @@ use App\Contracts\Services\ListServiceContract;
 use App\Http\Api\Requests\ListItem\CompleteRequest;
 use App\Http\Api\Requests\ListItem\CreateRequest;
 use App\Http\Api\Requests\ListItem\DeleteRequest;
+use App\Http\Api\Requests\ListItem\UncompleteRequest;
 use App\Http\Api\Requests\ListItem\UpdateRequest;
 
 final class ListItemController extends Controller
@@ -53,6 +54,17 @@ final class ListItemController extends Controller
     {
         try {
             return $this->listService->completeListItem($request->toData())->toArray();
+        } catch (\Throwable $exception) {
+            return $this->json([
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
+    }
+
+    public function uncomplete(UncompleteRequest $request): array|\Jotup\Http\Response\Result\JsonResult
+    {
+        try {
+            return $this->listService->uncompleteListItem($request->toData())->toArray();
         } catch (\Throwable $exception) {
             return $this->json([
                 'message' => $exception->getMessage(),

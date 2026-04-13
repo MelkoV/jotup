@@ -24,14 +24,27 @@ Route::group([
         });
     });
 
+    Route::post('/feedback', [\App\Http\Api\Controllers\FeedbackController::class, 'create']);
+
+    Route::prefix('/lists')->group(function () {
+        Route::get('/info/{url}', [\App\Http\Api\Controllers\ListController::class, 'info']);
+    });
+
     Route::middleware(\App\Http\Middleware\HandleJwtToken::class)->group(function () {
         Route::prefix('/user')->group(function () {
             Route::get('/profile', [\App\Http\Api\Controllers\UserController::class, 'profile']);
+            Route::put('/profile', [\App\Http\Api\Controllers\UserController::class, 'updateProfile']);
+            Route::post('/change-password', [\App\Http\Api\Controllers\UserController::class, 'changePassword']);
         });
 
         Route::prefix('/lists')->group(function () {
             Route::get('/', [\App\Http\Api\Controllers\ListController::class, 'index']);
             Route::post('/', [\App\Http\Api\Controllers\ListController::class, 'create']);
+            Route::post('/copy/{id}', [\App\Http\Api\Controllers\ListController::class, 'copy']);
+            Route::post('/create-from-template/{id}', [\App\Http\Api\Controllers\ListController::class, 'createFromTemplate']);
+            Route::get('/share/{id}', [\App\Http\Api\Controllers\ListController::class, 'share']);
+            Route::put('/share/{id}', [\App\Http\Api\Controllers\ListController::class, 'updateShare']);
+            Route::post('/join/{id}', [\App\Http\Api\Controllers\ListController::class, 'join']);
             Route::get('/delete-types/{id}', [\App\Http\Api\Controllers\ListController::class, 'deleteTypes']);
             Route::delete('/left/{id}', [\App\Http\Api\Controllers\ListController::class, 'left']);
             Route::get('/{id}', [\App\Http\Api\Controllers\ListController::class, 'view']);
@@ -42,6 +55,7 @@ Route::group([
         Route::prefix('/list-items')->group(function () {
             Route::post('/', [\App\Http\Api\Controllers\ListItemController::class, 'create']);
             Route::put('/complete/{id}', [\App\Http\Api\Controllers\ListItemController::class, 'complete']);
+            Route::put('/uncomplete/{id}', [\App\Http\Api\Controllers\ListItemController::class, 'uncomplete']);
             Route::put('/{id}', [\App\Http\Api\Controllers\ListItemController::class, 'update']);
             Route::delete('/{id}', [\App\Http\Api\Controllers\ListItemController::class, 'delete']);
         });

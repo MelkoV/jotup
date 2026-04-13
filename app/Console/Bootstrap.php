@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console;
 
 use App\Console\Commands\AboutCommand;
+use App\Console\Commands\ConsumeAvatarQueueCommand;
 use App\Console\Commands\DbSmokeCommand;
 use App\ServiceProviders\AppServiceProvider;
 use App\ServiceProviders\DatabaseServiceProvider;
@@ -26,6 +27,7 @@ class Bootstrap implements \Jotup\Contracts\Bootstrap
     {
         $application->registerCommand(AboutCommand::class);
         $application->registerCommand(DbSmokeCommand::class);
+        $application->registerCommand(ConsumeAvatarQueueCommand::class);
     }
 
     public function getServiceProviders(): array
@@ -43,6 +45,7 @@ class Bootstrap implements \Jotup\Contracts\Bootstrap
         return [
             AboutCommand::class,
             DbSmokeCommand::class,
+            ConsumeAvatarQueueCommand::class,
             CreateCommand::class,
             DownCommand::class,
             HistoryCommand::class,

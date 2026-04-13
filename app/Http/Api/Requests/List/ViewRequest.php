@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Api\Requests\List;
 
-use App\Data\List\RequestIdData;
+use App\Data\List\RequestIdAndUserData;
 use App\Http\Api\Requests\Rules\CheckCanViewList;
 use Jotup\Http\Request\Request;
 
@@ -14,16 +14,20 @@ final class ViewRequest extends Request
     {
         return [
             'id' => ['required', 'uuid', 'bail', new CheckCanViewList()],
+            'user_id' => ['required', 'uuid'],
         ];
     }
 
     protected function prepareForValidation(): void
     {
-        $this->merge(['id' => $this->route('id')]);
+        $this->merge([
+            'id' => $this->route('id'),
+            'user_id' => $this->userId(),
+        ]);
     }
 
-    public function toData(): RequestIdData
+    public function toData(): RequestIdAndUserData
     {
-        return RequestIdData::from($this->validated());
+        return RequestIdAndUserData::from($this->validated());
     }
 }

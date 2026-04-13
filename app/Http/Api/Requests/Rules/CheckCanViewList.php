@@ -24,7 +24,7 @@ final class CheckCanViewList implements RuleInterface
 
         $query = $db->query()
             ->from('{{%lists}}')
-            ->where(['id' => $value]);
+            ->where(['id' => $value, 'deleted_at' => null]);
 
         $userId = $request->userId();
         if ($userId !== null) {
@@ -34,8 +34,9 @@ final class CheckCanViewList implements RuleInterface
             }
 
             $member = $db->query()
-                ->from('{{%list_users}}')
-                ->where(['list_id' => $value, 'user_id' => $userId])
+                ->from(['lu' => '{{%list_users}}'])
+                ->innerJoin(['lists' => '{{%lists}}'], 'lists.[[id]] = lu.[[list_id]]')
+                ->where(['lu.list_id' => $value, 'lu.user_id' => $userId, 'lists.deleted_at' => null])
                 ->exists();
 
             if (!$member) {

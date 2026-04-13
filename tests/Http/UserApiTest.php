@@ -229,6 +229,81 @@ final class UserApiTest extends ApiTestCase
         $this->assertNull($payload['avatar']);
     }
 
+    public function testUpdateProfileUpdatesAuthenticatedUserName(): void
+    {
+        $user = $this->createUser(name: 'Anton');
+
+        $response = $this->putJson(
+            '/api/v1/user/profile',
+            ['name' => 'Anton Updated'],
+            $this->withBearer($this->makeJwtToken($user->id)),
+        );
+        $payload = $this->decodeJson($response);
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame($user->id, $payload['id']);
+        $this->assertSame('Anton Updated', $payload['name']);
+        $this->assertSame('Anton Updated', $this->users()->findById($user->id)->name);
+    }
+
+    public function testChangePasswordRejectsWrongCurrentPassword(): void
+    {
+        $user = $this->createUser(password: 'password123');
+
+        $response = $this->postJson(
+            '/api/v1/user/change-password',
+            [
+                'old_password' => 'wrong-pass1',
+                'password' => 'new-password123',
+                'repeat_password' => 'new-password123',
+            ],
+            $this->withBearer($this->makeJwtToken($user->id)),
+        );
+        $payload = $this->decodeJson($response);
+
+        $this->assertSame(422, $response->getStatusCode());
+        $this->assertSame('Current password is incorrect.', $payload['message']);
+        $this->assertSame(['Current password is incorrect.'], $payload['errors']['old_password']);
+    }
+
+    public function testChangePasswordUpdatesCredentials(): void
+    {
+        $user = $this->createUser(password: 'password123');
+
+        $response = $this->postJson(
+            '/api/v1/user/change-password',
+            [
+                'old_password' => 'password123',
+                'password' => 'new-password123',
+                'repeat_password' => 'new-password123',
+            ],
+            $this->withBearer($this->makeJwtToken($user->id)),
+        );
+        $payload = $this->decodeJson($response);
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertTrue($payload['success']);
+
+        $oldLogin = $this->postJson('/api/v1/user/sign-in', [
+            'email' => $user->email,
+            'password' => 'password123',
+            'device' => UserDevice::Web->value,
+            'device_id' => 'web-client-old',
+        ]);
+        $this->assertSame(422, $oldLogin->getStatusCode());
+
+        $newLogin = $this->postJson('/api/v1/user/sign-in', [
+            'email' => $user->email,
+            'password' => 'new-password123',
+            'device' => UserDevice::Web->value,
+            'device_id' => 'web-client-new',
+        ]);
+        $newPayload = $this->decodeJson($newLogin);
+
+        $this->assertSame(200, $newLogin->getStatusCode());
+        $this->assertSame($user->id, $newPayload['user']['id']);
+    }
+
     public function testRefreshTokenRejectsMissingCookie(): void
     {
         $response = $this->postJson('/api/v1/user/refresh-token');

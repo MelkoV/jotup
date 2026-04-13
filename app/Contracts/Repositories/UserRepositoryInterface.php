@@ -16,7 +16,21 @@ interface UserRepositoryInterface
 
     public function findByEmail(string $email): UserData;
 
+    /**
+     * @return array{user: UserData, password: string}
+     */
+    public function findAuthByEmail(string $email): array;
+
+    /**
+     * @return array{user: UserData, password: string}
+     */
+    public function findAuthById(string $id): array;
+
     public function updateAvatar(UserData $user, ?string $avatar): UserData;
+
+    public function updateName(string $id, string $name): UserData;
+
+    public function updatePassword(string $id, string $passwordHash): void;
 
     public function upsertDevice(UserData $data, UserDevice $device, ?string $deviceId = null): void;
 }

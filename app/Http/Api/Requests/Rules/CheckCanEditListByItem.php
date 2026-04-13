@@ -27,7 +27,7 @@ final class CheckCanEditListByItem implements RuleInterface
             ->select(['li.list_id', 'lists.owner_id', 'lists.access'])
             ->from(['li' => '{{%list_items}}'])
             ->innerJoin(['lists' => '{{%lists}}'], 'lists.[[id]] = li.[[list_id]]')
-            ->where(['li.id' => $value])
+            ->where(['li.id' => $value, 'lists.deleted_at' => null])
             ->one();
 
         if ($row === null) {
@@ -40,8 +40,9 @@ final class CheckCanEditListByItem implements RuleInterface
         }
 
         $member = $db->query()
-            ->from('{{%list_users}}')
-            ->where(['list_id' => $row['list_id'], 'user_id' => $userId])
+            ->from(['lu' => '{{%list_users}}'])
+            ->innerJoin(['lists' => '{{%lists}}'], 'lists.[[id]] = lu.[[list_id]]')
+            ->where(['lu.list_id' => $row['list_id'], 'lu.user_id' => $userId, 'lists.deleted_at' => null])
             ->exists();
 
         $canEdit = (((int) $row['access']) & ListAccess::CanEdit->value) === ListAccess::CanEdit->value;

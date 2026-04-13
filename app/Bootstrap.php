@@ -7,6 +7,7 @@ namespace App;
 use App\Console\Commands\AboutCommand;
 use App\Console\Commands\DbSmokeCommand;
 use App\Http\Middleware\AddDebugHeaders;
+use App\Http\Middleware\BindRequestIdToExecutionScope;
 use App\Http\Middleware\HandleCors;
 use App\ServiceProviders\AppServiceProvider;
 use App\ServiceProviders\DatabaseServiceProvider;
@@ -35,6 +36,7 @@ class Bootstrap implements \Jotup\Contracts\Bootstrap
 
     public function boot(Application|WithMiddleware $application): void
     {
+        $application->registerMiddleware(BindRequestIdToExecutionScope::class);
         $application->registerMiddleware(HandleCors::class);
         $application->registerMiddleware(AddDebugHeaders::class);
     }

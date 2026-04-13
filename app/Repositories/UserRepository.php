@@ -67,17 +67,35 @@ final readonly class UserRepository implements UserRepositoryInterface
 
     public function findByEmail(string $email): UserData
     {
+        return $this->hydrateUser($this->findUserRowByEmail($email));
+    }
+
+    public function findAuthByEmail(string $email): array
+    {
+        $row = $this->findUserRowByEmail($email);
+
+        return [
+            'user' => $this->hydrateUser($row),
+            'password' => (string) $row['password'],
+        ];
+    }
+
+    public function findAuthById(string $id): array
+    {
         $row = $this->db
             ->query()
             ->from('{{%users}}')
-            ->where(['email' => $email])
+            ->where(['id' => $id])
             ->one();
 
         if ($row === null) {
             throw new UserNotFoundException();
         }
 
-        return $this->hydrateUser($row);
+        return [
+            'user' => $this->hydrateUser($row),
+            'password' => (string) $row['password'],
+        ];
     }
 
     public function updateAvatar(UserData $user, ?string $avatar): UserData
@@ -88,6 +106,24 @@ final readonly class UserRepository implements UserRepositoryInterface
         ], ['id' => $user->id])->execute();
 
         return $this->findById($user->id);
+    }
+
+    public function updateName(string $id, string $name): UserData
+    {
+        $this->db->command()->update('{{%users}}', [
+            'name' => $name,
+            'updated_at' => (new DateTime())->format('Y-m-d H:i:s'),
+        ], ['id' => $id])->execute();
+
+        return $this->findById($id);
+    }
+
+    public function updatePassword(string $id, string $passwordHash): void
+    {
+        $this->db->command()->update('{{%users}}', [
+            'password' => $passwordHash,
+            'updated_at' => (new DateTime())->format('Y-m-d H:i:s'),
+        ], ['id' => $id])->execute();
     }
 
     public function upsertDevice(UserData $data, UserDevice $device, ?string $deviceId = null): void
@@ -116,6 +152,24 @@ final readonly class UserRepository implements UserRepositoryInterface
             'created_at' => $now,
             'updated_at' => $now,
         ])->execute();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function findUserRowByEmail(string $email): array
+    {
+        $row = $this->db
+            ->query()
+            ->from('{{%users}}')
+            ->where(['email' => $email])
+            ->one();
+
+        if ($row === null) {
+            throw new UserNotFoundException();
+        }
+
+        return $row;
     }
 
     /**

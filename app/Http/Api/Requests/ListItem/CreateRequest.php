@@ -31,7 +31,19 @@ final class CreateRequest extends Request
 
     protected function prepareForValidation(): void
     {
-        $this->merge(['user_id' => $this->userId()]);
+        $attributes = $this->input('attributes', []);
+        $attributes = is_array($attributes) ? $attributes : [];
+
+        $this->merge([
+            'user_id' => $this->userId(),
+            'priority' => $this->input('priority', $attributes['priority'] ?? null),
+            'description' => $this->input('description', $attributes['description'] ?? null),
+            'unit' => $this->input('unit', $attributes['unit'] ?? null),
+            'deadline' => $this->input('deadline', $attributes['deadline'] ?? null),
+            'price' => $this->input('price', $attributes['price'] ?? null),
+            'cost' => $this->input('cost', $attributes['cost'] ?? null),
+            'count' => $this->input('count', $attributes['count'] ?? null),
+        ]);
     }
 
     public function toData(): CreateRequestData

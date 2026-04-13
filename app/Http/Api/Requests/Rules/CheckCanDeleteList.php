@@ -24,7 +24,7 @@ final class CheckCanDeleteList implements RuleInterface
 
         $row = $db->query()
             ->from('{{%lists}}')
-            ->where(['id' => $value])
+            ->where(['id' => $value, 'deleted_at' => null])
             ->one();
 
         if ($row === null) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Jotup\Http\Response;
 
+use App\Exceptions\RecordNotFoundException;
 use Jotup\Http\Exception\HttpException;
 use Jotup\Http\Exception\ValidationException;
 use Jotup\Http\Response\Result\EmptyResult;
@@ -79,6 +80,12 @@ class Responder
 
         if ($throwable instanceof HttpException) {
             return $this->fromHttpException($throwable);
+        }
+
+        if ($throwable instanceof RecordNotFoundException) {
+            return $this->json([
+                'message' => $throwable->getMessage() !== '' ? $throwable->getMessage() : 'Not found.',
+            ], 404);
         }
 
         return $this->json([

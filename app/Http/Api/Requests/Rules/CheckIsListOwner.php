@@ -1,0 +1,41 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Api\Requests\Rules;
+
+use Jotup\Exceptions\ValidationError;
+use Jotup\Http\Request\Request;
+use Jotup\Http\Request\Validation\RuleInterface;
+
+final class CheckIsListOwner implements RuleInterface
+{
+    public function name(): string
+    {
+        return 'is_list_owner';
+    }
+
+    public function validate(string $field, mixed $value, array $data, Request $request): void
+    {
+        $db = $request->db();
+        if ($db === null) {
+            return;
+        }
+
+        $row = $db->query()
+            ->from('{{%lists}}')
+            ->where(['id' => $value, 'deleted_at' => null])
+            ->one();
+
+        if ($row === null) {
+            throw new ValidationError('The selected list is unavailable.');
+        }
+
+        $userId = $request->userId();
+        if ($userId !== null && (string) $row['owner_id'] === $userId) {
+            return;
+        }
+
+        throw new ValidationError('Only the list owner can manage sharing settings.');
+    }
+}
