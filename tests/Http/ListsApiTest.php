@@ -563,6 +563,32 @@ final class ListsApiTest extends ApiTestCase
         $this->assertSame(2, $payload['version']);
     }
 
+    public function testWishlistItemsHideCompletedUserData(): void
+    {
+        $owner = $this->createUser(name: 'Owner');
+        $list = $this->createList($owner->id, 'Wishlist', false, ListType::Wishlist);
+        $item = $this->createListItem($owner->id, $list->id, 'Book');
+
+        $response = $this->putJson('/api/v1/list-items/complete/' . $item->id, [
+            'name' => 'Book',
+            'version' => 1,
+        ], $this->withBearer($this->makeJwtToken($owner->id)));
+        $payload = $this->decodeJson($response);
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertTrue($payload['is_completed']);
+        $this->assertNull($payload['completed_user_name']);
+        $this->assertNull($payload['completed_user_avatar']);
+
+        $viewResponse = $this->getJson('/api/v1/lists/' . $list->id, headers: $this->withBearer($this->makeJwtToken($owner->id)));
+        $viewPayload = $this->decodeJson($viewResponse);
+
+        $this->assertSame(200, $viewResponse->getStatusCode());
+        $this->assertNull($viewPayload['items'][0]['completed_user_name']);
+        $this->assertNull($viewPayload['items'][0]['completed_user_avatar']);
+        $this->assertSame([], $viewPayload['members']);
+    }
+
     public function testUncompleteListItemRestoresOpenState(): void
     {
         $owner = $this->createUser(name: 'Owner');

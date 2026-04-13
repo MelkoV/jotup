@@ -21,6 +21,7 @@ use App\Data\ListItem\ListItemData;
 use App\Data\ListItem\UpdateRequestData as UpdateItemRequestData;
 use App\Enums\ListAccess;
 use App\Enums\ListFilterTemplate;
+use App\Enums\ListType;
 use App\Exceptions\ListItemCompletedException;
 use App\Exceptions\ListItemNotCompletedException;
 use App\Exceptions\ListItemNotFoundException;
@@ -367,6 +368,16 @@ final readonly class ListRepository implements ListRepositoryInterface
 
     public function getListMembers(string $listId): array
     {
+        $listType = $this->db->query()
+            ->select(['type'])
+            ->from('{{%lists}}')
+            ->where(['id' => $listId, 'deleted_at' => null])
+            ->scalar();
+
+        if ($listType === ListType::Wishlist->value) {
+            return [];
+        }
+
         $rows = $this->db->command(
             <<<'SQL'
 SELECT
@@ -526,8 +537,8 @@ SQL,
         if ($filter->text !== null && $filter->text !== '') {
             $query->andWhere([
                 'or',
-                ['like', 'lists.name', $filter->text],
-                ['like', 'lists.description', $filter->text],
+                ['ilike', 'lists.name', $filter->text],
+                ['ilike', 'lists.description', $filter->text],
             ]);
         }
 
@@ -541,6 +552,7 @@ SQL,
                 'li.id',
                 'creator.name AS user_name',
                 'li.list_id',
+                'lists.type AS list_type',
                 'li.version',
                 'li.is_completed',
                 'li.name',
@@ -638,6 +650,9 @@ SQL,
             $attributes = [];
         }
 
+        $hideCompletedUser = isset($row['list_type'])
+            && (string) $row['list_type'] === ListType::Wishlist->value;
+
         return new ListItemData(
             id: (string) $row['id'],
             user_name: (string) $row['user_name'],
@@ -655,8 +670,8 @@ SQL,
             ),
             description: isset($row['description']) ? (string) $row['description'] : null,
             user_avatar: isset($row['user_avatar']) ? (string) $row['user_avatar'] : null,
-            completed_user_name: isset($row['completed_user_name']) ? (string) $row['completed_user_name'] : null,
-            completed_user_avatar: isset($row['completed_user_avatar']) ? (string) $row['completed_user_avatar'] : null,
+            completed_user_name: $hideCompletedUser ? null : (isset($row['completed_user_name']) ? (string) $row['completed_user_name'] : null),
+            completed_user_avatar: $hideCompletedUser ? null : (isset($row['completed_user_avatar']) ? (string) $row['completed_user_avatar'] : null),
         );
     }
 
