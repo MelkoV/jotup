@@ -31,7 +31,8 @@ final class ConsumeAvatarQueueCommand extends Command
     {
         $this
             ->addOption('once', null, InputOption::VALUE_NONE, 'Process a single message or exit if queue is empty.')
-            ->addOption('timeout', null, InputOption::VALUE_REQUIRED, 'Blocking pop timeout in seconds.', '5');
+            ->addOption('timeout', null, InputOption::VALUE_REQUIRED, 'Blocking pop timeout in seconds.', '5')
+            ->addOption('retry-delay', null, InputOption::VALUE_REQUIRED, 'Delay before retry after a transient queue error, in seconds.', '2');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -39,14 +40,26 @@ final class ConsumeAvatarQueueCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $once = (bool) $input->getOption('once');
         $timeout = max(1, (int) $input->getOption('timeout'));
+        $retryDelay = max(1, (int) $input->getOption('retry-delay'));
 
         do {
             try {
                 $message = $this->queue->pop($timeout);
             } catch (Throwable $exception) {
-                $io->error($exception->getMessage());
+                if ($once) {
+                    $io->error($exception->getMessage());
 
-                return Command::FAILURE;
+                    return Command::FAILURE;
+                }
+
+                $io->warning(sprintf(
+                    'Queue read failed: %s. Retrying in %d second(s).',
+                    $exception->getMessage(),
+                    $retryDelay,
+                ));
+                sleep($retryDelay);
+
+                continue;
             }
 
             if ($message === null) {

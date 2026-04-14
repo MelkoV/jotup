@@ -10,7 +10,7 @@ return [
     'password' => Env::get('REDIS_PASSWORD'),
     'database' => (int) Env::get('REDIS_DB', '0'),
     'timeout' => (float) Env::get('REDIS_TIMEOUT', '2'),
-    'read_timeout' => (float) Env::get('REDIS_READ_TIMEOUT', '5'),
+    'read_timeout' => (float) Env::get('REDIS_READ_TIMEOUT', '15'),
     'queues' => [
         'avatar' => (string) Env::get('REDIS_QUEUE_AVATAR', 'avatar:sync'),
     ],
