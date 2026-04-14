@@ -2,5 +2,6 @@
 /.codex
 /.phpunit.cache
 /vendor
+/docker_prod
 composer.phar
 .env

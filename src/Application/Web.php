@@ -7,6 +7,7 @@ namespace Jotup\Application;
 use Jotup\Config;
 use Jotup\Contracts\WithMiddleware;
 use Jotup\ErrorHandler;
+use Jotup\ExecutionScope\ExecutionScopeProviderInterface;
 use Jotup\Http\Handler\NotFoundHandler;
 use Jotup\Http\HttpServiceProvider;
 use Jotup\Http\Kernel;
@@ -18,6 +19,8 @@ use Jotup\Http\Response\Emitter;
 use Jotup\Http\Routing\Route;
 use Jotup\Http\Routing\RouteCollection;
 use Jotup\Logger\Logger;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
@@ -34,15 +37,19 @@ class Web extends Base implements WithMiddleware
         $request = ServerRequest::fromGlobals();
         /** @var Emitter $emitter */
         $emitter = $this->container->get(Emitter::class);
-        $kernel = new Kernel(
-            notFoundHandler: $this->container->get(NotFoundHandler::class),
-            exceptionMiddleware: $this->container->get(ExceptionMiddleware::class),
-            routingMiddleware: $this->container->get(RoutingMiddleware::class),
-            dispatchMiddleware: $this->container->get(DispatchMiddleware::class),
-            middleware: $this->middleware,
-        );
-        $response = $kernel->handle($request);
+        $response = $this->handle($request);
         $emitter->emit($response);
+    }
+
+    public function handle(ServerRequestInterface $request): ResponseInterface
+    {
+        $this->clearExecutionScope();
+
+        try {
+            return $this->createKernel()->handle($request);
+        } finally {
+            $this->clearExecutionScope();
+        }
     }
 
     /**
@@ -78,6 +85,17 @@ class Web extends Base implements WithMiddleware
         return $this->routeCollection = $collection;
     }
 
+    protected function createKernel(): Kernel
+    {
+        return new Kernel(
+            notFoundHandler: $this->container->get(NotFoundHandler::class),
+            exceptionMiddleware: $this->container->get(ExceptionMiddleware::class),
+            routingMiddleware: $this->container->get(RoutingMiddleware::class),
+            dispatchMiddleware: $this->container->get(DispatchMiddleware::class),
+            middleware: $this->middleware,
+        );
+    }
+
     protected function registerServices(): void
     {
         new HttpServiceProvider()->register($this);
@@ -109,6 +127,15 @@ class Web extends Base implements WithMiddleware
             (bool) Config::get('error.ignoreVendorDeprecations', false),
         );
         $errorHandler->register(Config::get('error.level', E_ALL));
+    }
+
+    private function clearExecutionScope(): void
+    {
+        if (!$this->container->has(ExecutionScopeProviderInterface::class)) {
+            return;
+        }
+
+        $this->container->get(ExecutionScopeProviderInterface::class)->clear();
     }
 
 }

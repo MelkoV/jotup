@@ -363,6 +363,7 @@ final readonly class ListRepository implements ListRepositoryInterface
                 ->orderBy([
                     'li.is_completed' => SORT_ASC,
                     'li.created_at' => SORT_ASC,
+                    'li.name' => SORT_ASC,
                 ])
                 ->all()
         );

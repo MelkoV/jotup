@@ -29,7 +29,12 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
         gd \
         zip \
         intl \
-    && pecl install openswoole && docker-php-ext-enable openswoole
+    ; \
+    pecl install apcu; \
+    docker-php-ext-enable apcu; \
+    echo "apc.enable_cli=1" > /usr/local/etc/php/conf.d/apcu-cli.ini; \
+    pecl install openswoole; \
+    docker-php-ext-enable openswoole
 
 COPY --from=composer:2.9.5 /usr/bin/composer /usr/bin/composer
 
